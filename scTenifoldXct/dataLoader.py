@@ -90,14 +90,14 @@ def build_adata(
    
     if meta_gene_path is not None and Path(meta_gene_path).is_file():
         try:
-            print("adding metadata for genes...")
+            print("add metadata for genes")
             adata.var_names = pd.read_csv(meta_gene_path, header=header, sep=sep)[0]
             adata.var_names = adata.var_names.str.upper() # all species use upper case genes
         except Exception:
             raise ValueError("incorrect file path given to meta_gene")
     if meta_cell_path is not None and Path(meta_cell_path).is_file():
         try:
-            print("adding metadata for cells...")
+            print("add metadata for cells")
             adata.obs = pd.read_csv(meta_cell_path, header=header, sep=sep)
             if meta_cell_cols is not None:
                 adata.obs.columns = meta_cell_cols
@@ -105,14 +105,14 @@ def build_adata(
             raise ValueError("incorrect file path given to meta_cell")
 
     if log_normalize:
-        print("normalizing counts and save it to adata.layers[\"log1p\"]")
+        print("normalize counts and save it to adata.layers[\"log1p\"]")
         adata.layers["raw"] = adata.X
         sc.pp.normalize_total(adata, target_sum=1e4)
         sc.pp.log1p(adata)
         adata.layers["log1p"] = adata.X  # save log normalized counts to adata.X
 
     if as_sparse:
-        print("making counts sparse...")
+        print("make counts sparse...")
         adata.X = (
             sparse.csr_matrix(adata.X) if not sparse.issparse(adata.X) else adata.X
         )
