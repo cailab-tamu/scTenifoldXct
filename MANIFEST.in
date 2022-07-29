@@ -1,0 +1,3 @@
+recursive-include scTenifoldXct *.csv
+exclude scTenifoldXct/_deprecated.py
+exclude scTenifoldXct/_functional.py
