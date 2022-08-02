@@ -90,3 +90,4 @@ When analysis completes, hit Ctrl + p and Ctrl + q to detach from the container 
 docker cp xct:/app/xct_results/ .
 ```
 
+©️ The Texas A & M University System. All rights reserved.
