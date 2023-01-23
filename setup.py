@@ -50,7 +50,7 @@ setup(
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     ],
-    python_requires='~=3.9.6',
+    # python_requires='~=3.9.6',
     packages=PACKAGES, #["scTenifoldXct"], 
     # package_dir={"scTenifoldXct": 'scTenifoldXct'},
     # package_data={"scTenifoldXct": ['database/*.csv']},

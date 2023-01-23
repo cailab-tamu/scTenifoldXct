@@ -55,7 +55,7 @@ Single-sample interaction analysis:<br> https://github.com/cailab-tamu/scTenifol
 Two-sample differential interaction analysis:<br> https://github.com/cailab-tamu/scTenifoldXct/blob/master/tutorials/tutorial-merge_short_example.ipynb 
 <br/>
 
-### Run scTenifoldXct from command-line by Docker
+### Run scTenifoldXct from command-line by `Docker`
 scTenifoldXct provides command-line utilities for users who are not familiar with Python.<br>
 A Docker image of scTenifoldXct can be built from the repository. The Docker image has all required packages and databases included. 
 
