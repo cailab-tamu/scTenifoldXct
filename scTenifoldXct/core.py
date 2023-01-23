@@ -9,6 +9,7 @@ from anndata._core.views import ArrayView
 import anndata
 import scipy
 from scipy import sparse
+from typing import Union
 
 from .pcNet import make_pcNet
 from .nn import ManifoldAlignmentNet
@@ -190,7 +191,7 @@ class scTenifoldXct:
                  source_celltype: str,
                  target_celltype: str,
                  obs_label: str,  # ident
-                 GRN_file_dir: [str, PathLike] = None,
+                 GRN_file_dir: Union[str, PathLike] = None,
                  rebuild_GRN: bool = False,
                  query_DB: str = None,
                  alpha: float = 0.5,
@@ -303,16 +304,26 @@ class scTenifoldXct:
 
         return self._aligned_result
 
-    def knock_out(self, ko_gene_list):
+    def copy(self):
+        from copy import deepcopy
+        return deepcopy(self)
+
+    def Knk(self, ko_gene_list: Union[str, list]):
+        if not isinstance(ko_gene_list, list):
+            ko_gene_list = [ko_gene_list]
         gene_idx = pd.concat([self._genes[self._cell_names[0]].to_series(),
                               self._genes[self._cell_names[1]].to_series()])
-        assert len(gene_idx) == self._net_A.net.shape[0] == self._net_B.net.shape[0]
+        assert len(gene_idx) == self._net_A.net.shape[0] + self._net_B.net.shape[0]
 
         bool_idx = gene_idx.isin(ko_gene_list)
-        self._w = self._w.tolil()
-        self._w[bool_idx, :] = 0
-        self._w[:, bool_idx] = 0
-        self._w = self._w.tocoo()
+        self_knk = self.copy()
+        self_knk._w = self_knk._w.tolil()
+        self_knk._w[bool_idx, :] = 0
+        self_knk._w[:, bool_idx] = 0
+        self_knk._w = self_knk._w.tocoo()
+        if self.verbose:
+            print(f"remove edges and correspondence of gene {ko_gene_list}")
+        return self_knk
 
     def load_data(self, data, cell_name, obs_label):
         if isinstance(data, anndata.AnnData):
@@ -368,7 +379,7 @@ class scTenifoldXct:
     def _build_metric_vec(dic, gene_names):
         return np.array([dic[g] if g in dic else np.nan for g in gene_names])
 
-    def _build_w(self, alpha, query_DB=None, scale_w=True, mu: float = 1.) -> (sparse.coo_matrix, (int, int)):
+    def _build_w(self, alpha, query_DB=None, scale_w=True, mu: float = 1.) # -> (sparse.coo_matrix, (int, int)):
         '''build w: 3 modes, default None will not query the DB and use all pair-wise corresponding scores'''
         # (1-a)*u^2 + a*var
         ligand, receptor = self._cell_names[0], self._cell_names[1]
@@ -381,9 +392,7 @@ class scTenifoldXct:
                                                                         gene_names=self._genes[ligand])) +
                          alpha * (self._build_metric_vec(dic=self._cell_metric_dict[receptor]["var"],
                                                          gene_names=self._genes[ligand])))[:, None]
-
-        # make it sparse to reduce mem usage
-        w12 = sparse.coo_matrix(metric_a_temp @ metric_b_temp.T)
+        w12 = metric_a_temp @ metric_b_temp.T
         net_A, net_B = self._net_A.net.toarray()+1, self._net_B.net.toarray()+1
         del metric_a_temp
         del metric_b_temp
@@ -401,7 +410,7 @@ class scTenifoldXct:
                 raise ValueError("queryDB must be: [None, \'comb\' or \'pairs\']")
             w12 = self._zero_out_w(w12, used_row_index, used_col_index)
         if scale_w:  # scale factor using w12_orig
-            w12 = (mu * (net_A.sum() + net_B.sum()) / (2 * w12.sum())) * w12.toarray() 
+            w12 = (mu * (net_A.sum() + net_B.sum()) / (2 * w12.sum())) * w12 #.toarray()
         # w12 = w12.todok()
         # w = sparse.vstack([sparse.hstack([self._net_A.net.todok() + 1, w12]),
         #                    sparse.hstack([w12.T, self._net_B.net.todok() + 1])])
