@@ -379,7 +379,7 @@ class scTenifoldXct:
     def _build_metric_vec(dic, gene_names):
         return np.array([dic[g] if g in dic else np.nan for g in gene_names])
 
-    def _build_w(self, alpha, query_DB=None, scale_w=True, mu: float = 1.) # -> (sparse.coo_matrix, (int, int)):
+    def _build_w(self, alpha, query_DB=None, scale_w=True, mu: float = 1.): # -> (sparse.coo_matrix, (int, int)):
         '''build w: 3 modes, default None will not query the DB and use all pair-wise corresponding scores'''
         # (1-a)*u^2 + a*var
         ligand, receptor = self._cell_names[0], self._cell_names[1]
