@@ -1,5 +1,5 @@
 # scTenifoldXct
-Manifold learning to detect cell-cell interactions.
+a semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning
 <br/>
 <p align="center">
     <img src="LS_git.jpeg" alt="drawing" width="300"/>
@@ -90,4 +90,4 @@ When analysis completes, hit Ctrl + p and Ctrl + q to detach from the container 
 docker cp xct:/app/xct_results/ .
 ```
 
-The Texas A & M University System. All rights reserved.
+
