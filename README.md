@@ -1,5 +1,6 @@
 # scTenifoldXct
-a semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning
+a semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning <br>
+[Paper](https://doi.org/10.1016/j.cels.2023.01.004)
 <br/>
 <p align="center">
     <img src="LS_git.jpeg" alt="drawing" width="300"/>
