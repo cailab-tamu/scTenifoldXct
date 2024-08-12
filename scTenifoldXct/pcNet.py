@@ -1,24 +1,27 @@
 import numpy as np
-from numpy.linalg import svd
+from scipy.sparse.linalg import svds as sparse_svds
 from scipy import sparse
+from sklearn.preprocessing import normalize
 import os
 import time
 import ray
+from tqdm import tqdm
 
 
 def pcCoefficients(X, K, nComp):
-    y = X[:, K] 
-    Xi = np.delete(X, K, 1)
-    U, s, VT = svd(Xi, full_matrices=False) 
+    y = X[:,K]
+    mask = np.ones(X.shape[1], dtype=bool)
+    mask[K] = False
+    Xi = X[:,mask] 
+    u, s, VT = sparse_svds(Xi, k=nComp, random_state=0) # Calling Sparse SVD Solver
     #print ('U:', U.shape, 's:', s.shape, 'VT:', VT.shape)
-    V = VT[:nComp, :].T
+    V = np.fliplr(VT.T)
     #print('V:', V.shape)
-    score = Xi@V
-    t = np.sqrt(np.sum(score**2, axis=0))
-    score_lsq = ((score.T / (t**2)[:, None])).T
-    beta = np.sum(y[:, None]*score_lsq, axis=0)
-    beta = V@beta
-    return list(beta) 
+    score = Xi @ V
+    t = np.linalg.norm(score, axis = 0)
+    score_lsq = (score.T / (t**2).reshape(-1,1)).T
+    beta = V @ (y.T*score_lsq).flatten()
+    return beta.tolist()
 
 def pcNet(X, # X: cell * gene
     nComp: int = 3, 
@@ -26,14 +29,19 @@ def pcNet(X, # X: cell * gene
     symmetric: bool = True, 
     q: float = 0., # q: 0-100
     as_sparse: bool = True,
-    random_state: int = 0): 
-    X = X.toarray() if sparse.issparse(X) else X
+    random_state: int = 0):
+
+    X = X if sparse.issparse(X) else sparse.csr_matrix(X)
+
+    # Standardizing the data
+    X = normalize(X, axis=0)
+
     if nComp < 2 or nComp >= X.shape[1]:
         raise ValueError('nComp should be greater or equal than 2 and lower than the total number of genes') 
     else:
         np.random.seed(random_state)
         n = X.shape[1] # genes    
-        B = np.array([pcCoefficients(X, k, nComp) for k in range(n)])    
+        B = np.array([pcCoefficients(X, k, nComp) for k in tqdm(range(n))])    
         A = np.ones((n, n), dtype=float)
         np.fill_diagonal(A, 0)
         for i in range(n):
@@ -45,9 +53,9 @@ def pcNet(X, # X: cell * gene
             A[absA < np.percentile(absA, q)] = 0
         if symmetric: # place in the end
             A = (A + A.T)/2
-        #diag(A) <- 0
+        
         if as_sparse:
-            A = sparse.csc_matrix(A)        
+            A = sparse.csc_matrix(A)       
         return A
 
 @ray.remote
