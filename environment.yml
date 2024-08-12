@@ -56,5 +56,5 @@ dependencies:
   - scanpy>=1.7.2
   - ray # https://docs.ray.io/en/latest/ray-overview/installation.html
   - notebook
-name: scTenifold2
+name: scTenifold
 
