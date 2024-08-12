@@ -5,7 +5,6 @@ from sklearn.preprocessing import normalize
 import os
 import time
 import ray
-from tqdm import tqdm
 
 
 def pcCoefficients(X, K, nComp):
@@ -41,7 +40,7 @@ def pcNet(X, # X: cell * gene
     else:
         np.random.seed(random_state)
         n = X.shape[1] # genes    
-        B = np.array([pcCoefficients(X, k, nComp) for k in tqdm(range(n))])    
+        B = np.array([pcCoefficients(X, k, nComp) for k in range(n)])    
         A = np.ones((n, n), dtype=float)
         np.fill_diagonal(A, 0)
         for i in range(n):
