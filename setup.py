@@ -5,7 +5,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 DESCRIPTION = "scTenifoldXct"
 PACKAGES = find_packages(exclude=("tests*",))
-# exec(open('scTenifoldXct/version.py').read())
+exec(open('scTenifoldXct/version.py').read())
 
 INSTALL_REQUIRES = [
         "anndata",
@@ -23,7 +23,7 @@ INSTALL_REQUIRES = [
 
 setup(
     name="scTenifoldXct",
-    # version=__version__,
+    version=__version__,
     description=DESCRIPTION,
     long_description=README,
     long_description_content_type="text/markdown",
