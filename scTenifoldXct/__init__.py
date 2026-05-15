@@ -1,9 +1,10 @@
 import logging
 
-from .version import __version__
 from scTenifoldXct.core import scTenifoldXct
-from scTenifoldXct.visualization import get_Xct_pairs, plot_XNet
 from scTenifoldXct.merge import merge_scTenifoldXct
+from scTenifoldXct.visualization import get_Xct_pairs, plot_XNet
+
+from .version import __version__
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 

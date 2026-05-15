@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import itertools
 import logging
 
@@ -18,7 +20,7 @@ logger = logging.getLogger(__name__)
 class Net(nn.Module):
     """Define the neural network"""
     def __init__(self, D_in, H1, H2, D_out):
-        super(Net, self).__init__()
+        super().__init__()
         self.linear1 = torch.nn.Linear(D_in, H1)
         self.linear2 = torch.nn.Linear(H1, H2)
         self.linear3 = torch.nn.Linear(H2, D_out)
@@ -91,7 +93,7 @@ class ManifoldAlignmentNet: # trainer
         y_preds = []
         for i in range(1, self.n_models + 1):
             y_preds.append(self.model_dic[f'model_{i}'](self.data_arr[i - 1]))
-        outputs = torch.cat(y_preds[:], 0) 
+        outputs = torch.cat(y_preds[:], 0)
         u, _, v = torch.svd(outputs, some=True)
         proj_outputs = u @ v.t()
         self.projections = proj_outputs.detach().numpy()
@@ -162,9 +164,9 @@ class ManifoldAlignmentNet: # trainer
 
     @staticmethod
     def _pair_distance(
-                    projections, 
-                    gene_names_x, 
-                    gene_names_y, 
+                    projections,
+                    gene_names_x,
+                    gene_names_y,
                     dist_metric='euclidean'):
         '''distances of each directional pair in latent space'''
         X = projections[:len(projections) // 2, :]
@@ -174,12 +176,12 @@ class ManifoldAlignmentNet: # trainer
 
         return dist_df
 
-    def nn_aligned_dist(self, 
-                        projections, 
-                        gene_names_x, 
-                        gene_names_y, 
-                        w12_shape, 
-                        dist_metric='euclidean', 
+    def nn_aligned_dist(self,
+                        projections,
+                        gene_names_x,
+                        gene_names_y,
+                        w12_shape,
+                        dist_metric='euclidean',
                         rank=False,
                         verbose: bool = True):
         '''output info of each pair'''

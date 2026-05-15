@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 import logging
-from typing import List, Union
 
 import anndata
 
 logger = logging.getLogger(__name__)
 
 
-def get_cko_data(data: anndata.AnnData, cko_gene_names: Union[List[str], str]) -> anndata.AnnData:
+def get_cko_data(data: anndata.AnnData, cko_gene_names: list[str] | str) -> anndata.AnnData:
     """
     Return a copy of ``data`` with the conditional-knockout genes zeroed out.
 

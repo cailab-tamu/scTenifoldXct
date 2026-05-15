@@ -1,19 +1,10 @@
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 import scanpy as sc
-from anndata import (
-    AnnData,
-    read_h5ad,
-    read_csv,
-    read_excel,
-    read_hdf,
-    read_loom,
-    read_mtx,
-    read_text,
-)
 from scipy import sparse
 
 sc.settings.verbosity = 0
@@ -24,8 +15,8 @@ file_attrs = ["h5ad", "csv", "xlsx", "h5", "loom", "mtx", "txt", "mat"]
 read_fun_keys = ["h5ad", "csv", "excel", "hdf", "loom", "mtx", "text"] # fun from scanpy read
 
 
-def _read_counts(counts_path: str, 
-                transpose: bool = False, 
+def _read_counts(counts_path: str,
+                transpose: bool = False,
                 **kwargs):
 
     """Read counts file to build an AnnData.
@@ -42,8 +33,8 @@ def _read_counts(counts_path: str,
     if Path(counts_path).is_file() and file_attr in file_attrs:
         logger.info(f"loading counts from {counts_path}")
         if file_attr == "mat":
-            import numpy as np
             import h5py
+            import numpy as np
             f = h5py.File(counts_path,'r')
             # print(f.keys())
             counts = np.array(f.get(list(f.keys())[0]), dtype='float32')
@@ -65,9 +56,9 @@ def _read_counts(counts_path: str,
 
 def build_adata(
     counts_path: str,
-    meta_gene_path: Union[None, str] = None,
-    meta_cell_path: Union[None, str] = None,
-    meta_cell_cols: Union[None, str] = None,
+    meta_gene_path: None | str = None,
+    meta_cell_path: None | str = None,
+    meta_cell_cols: None | str = None,
     sep="\t",
     header = None,
     log_normalize: bool = True,
@@ -88,9 +79,9 @@ def build_adata(
     Returns:
         AnnData
     """
-    
+
     adata = _read_counts(counts_path, **kwargs)
-   
+
     if meta_gene_path is not None and Path(meta_gene_path).is_file():
         try:
             logger.info("add metadata for genes")

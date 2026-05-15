@@ -1,9 +1,8 @@
-import pytest
-
 import itertools
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
 from scTenifoldXct.core import null_test
 from scTenifoldXct.merge import merge_scTenifoldXct
@@ -37,5 +36,5 @@ def test_null_test(df_nn, candidates, filter_zeros):
 def test_chi2_test(xct_test, xct_test_r):
     xct_tests = merge_scTenifoldXct(xct_test, xct_test_r)
     emb = xct_tests.get_embeds(train=True)
-    xct_tests.nn_aligned_diff(emb) 
+    xct_tests.nn_aligned_diff(emb)
     xct_tests.chi2_diff_test()

@@ -1,6 +1,7 @@
-import pytest
 import numpy as np
+import pytest
 import scanpy as sc
+
 from scTenifoldXct.core import scTenifoldXct
 
 
@@ -17,24 +18,24 @@ def ada_test():
 # small dataset
 @pytest.fixture(scope="session")
 def xct_test(ada_test):
-    return scTenifoldXct(data=ada_test, 
+    return scTenifoldXct(data=ada_test,
                         source_celltype='14Mo',
                         target_celltype='15Mo',
                         obs_label="paul15_clusters",
-                        rebuild_GRN=True, 
+                        rebuild_GRN=True,
                         GRN_file_dir='./Net_for_Test',
-                        verbose=True, 
+                        verbose=True,
                         n_cpus=2,
                         )
 
 
 @pytest.fixture(scope="session")
 def xct_test_r(ada_test):
-    return scTenifoldXct(data=ada_test, 
+    return scTenifoldXct(data=ada_test,
                         source_celltype='15Mo',
                         target_celltype='14Mo',
                         obs_label="paul15_clusters",
-                        rebuild_GRN=False, 
+                        rebuild_GRN=False,
                         GRN_file_dir='./Net_for_Test',
-                        verbose=True, 
+                        verbose=True,
                         )

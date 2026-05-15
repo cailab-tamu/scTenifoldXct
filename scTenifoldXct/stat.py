@@ -9,11 +9,11 @@ from statsmodels.stats.multitest import multipletests
 logger = logging.getLogger(__name__)
 
 
-def chi2_test(df_nn: pd.DataFrame, 
-            df: int = 1, 
-            pval: float = 0.05, 
-            FDR: bool = True, 
-            candidates: list = None, 
+def chi2_test(df_nn: pd.DataFrame,
+            df: int = 1,
+            pval: float = 0.05,
+            FDR: bool = True,
+            candidates: list = None,
             plot: bool = False):
     '''chi-sqaure left tail test to have enriched pairs'''
     if 'dist' not in df_nn.columns:
@@ -56,11 +56,11 @@ def chi2_test(df_nn: pd.DataFrame,
         return df_enriched
 
 
-def chi2_diff_test(df_nn: pd.DataFrame, 
-                df: int = 1, 
-                pval: float = 0.05, 
-                FDR: bool = True, 
-                candidates: list = None, 
+def chi2_diff_test(df_nn: pd.DataFrame,
+                df: int = 1,
+                pval: float = 0.05,
+                FDR: bool = True,
+                candidates: list = None,
                 plot: bool = False):
     '''chi-sqaure right tail test to have pairs with significant distance difference'''
     if 'diff2' not in df_nn.columns:
@@ -108,10 +108,10 @@ def chi2_diff_test(df_nn: pd.DataFrame,
         return df_enriched
 
 
-def null_test(df_nn: pd.DataFrame, 
-            candidates, 
-            filter_zeros=True, 
-            pval=0.05, 
+def null_test(df_nn: pd.DataFrame,
+            candidates,
+            filter_zeros=True,
+            pval=0.05,
             plot=False):
     '''nonparametric left tail test to have enriched pairs'''
     if 'dist' not in df_nn.columns or 'correspondence' not in df_nn.columns:
