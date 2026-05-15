@@ -9,23 +9,17 @@ a semi-supervised method for predicting cell-cell interactions and mapping cellu
 </p>
 <br/>
 
-### Install Dependencies
-We suggest first intall dependencies of scTenifoldXct with `conda`:
+### Install
+
+Install scTenifoldXct from PyPI:
+```shell
+pip install scTenifoldXct
+```
+
+**Install from source** (for development or the latest unreleased changes):
 ```shell
 git clone https://github.com/cailab-tamu/scTenifoldXct.git
 cd scTenifoldXct
-conda env create -f environment.yml
-conda activate scTenifold
-```
-
-### Install scTenifoldXct
-Install scTenifoldXct with `pip`:
-```shell
-pip install git+https://github.com/cailab-tamu/scTenifoldXct.git 
-```
-
-or install it manually from source:
-```shell
 pip install .
 ```
 
