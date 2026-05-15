@@ -296,12 +296,31 @@ class scTenifoldXct:
         return self._net_B
 
     @property
+    def cell_names(self):
+        """[source_celltype, target_celltype]."""
+        return self._cell_names
+
+    @property
+    def genes(self):
+        """Mapping of cell-type name -> gene-name Index."""
+        return self._genes
+
+    @property
+    def cell_data(self):
+        """Mapping of cell-type name -> per-cell-type AnnData view."""
+        return self._cell_data_dic
+
+    @property
     def aligned_dist(self):
         if self._aligned_result is None:
             raise AttributeError("No aligned_dist created yet. "
                                  "Please call train_nn() to train the neural network to get embeddings first.")
 
         return self._aligned_result
+
+    def get_data_arr(self):
+        """Return a list of expression arrays (gene x cell) per cell type."""
+        return self._get_data_arr()
 
     def copy(self):
         from copy import deepcopy
@@ -388,9 +407,9 @@ class scTenifoldXct:
                          alpha * (self._build_metric_vec(dic=self._cell_metric_dict[ligand]["var"],
                                                          gene_names=self._genes[ligand])))[:, None]
         metric_b_temp = ((1 - alpha) * np.square(self._build_metric_vec(dic=self._cell_metric_dict[receptor]["mean"],
-                                                                        gene_names=self._genes[ligand])) +
+                                                                        gene_names=self._genes[receptor])) +
                          alpha * (self._build_metric_vec(dic=self._cell_metric_dict[receptor]["var"],
-                                                         gene_names=self._genes[ligand])))[:, None]
+                                                         gene_names=self._genes[receptor])))[:, None]
         w12 = metric_a_temp @ metric_b_temp.T
         net_A, net_B = self._net_A.net.toarray()+1, self._net_B.net.toarray()+1
         del metric_a_temp

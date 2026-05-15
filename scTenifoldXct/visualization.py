@@ -1,9 +1,8 @@
+from collections import namedtuple
+
 import igraph as ig
 import numpy as np
-import pandas as pd
 import scipy.sparse
-import warnings
-from collections import namedtuple
 
 
 def get_Xct_pairs(df):
@@ -124,7 +123,7 @@ def plot_pcNet_method(net,
 
     kws = dict(visual_style_pcnet._asdict())
     kws.update(kwargs)
-    kws = _parse_kws(kws, g, bbox_scale, edge_width_scale)
+    kws = _parse_kws(kws, g, bbox_scale, edge_width_scale=edge_width_scale)
 
     if file_name is not None and verbose:
         print(f'graph saved as \"{file_name}\"')
