@@ -1,8 +1,12 @@
+import logging
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy
-import matplotlib.pyplot as plt
 from statsmodels.stats.multitest import multipletests
+
+logger = logging.getLogger(__name__)
 
 
 def chi2_test(df_nn: pd.DataFrame, 
@@ -35,7 +39,7 @@ def chi2_test(df_nn: pd.DataFrame,
         if candidates is not None:
             df_enriched = df_enriched[df_enriched.index.isin(candidates)].sort_values(by=['dist'])
             df_enriched['enriched_rank'] = np.arange(len(df_enriched)) + 1
-        print(f'\nTotal enriched: {len(df_enriched)} / {len(df_nn)}')
+        logger.info('Total enriched: %d / %d', len(df_enriched), len(df_nn))
 
         if plot:
             plt.hist(fc_null, bins=1000, color='royalblue')
@@ -87,7 +91,7 @@ def chi2_diff_test(df_nn: pd.DataFrame,
             # df_enriched['dir'] = (df_enriched['dist'].iloc[:, 1] > df_enriched['dist'].iloc[:, 0]).astype(int)
             # df_enriched['dir_sign'] = df_enriched['dir'].replace(
             #     {1: u'\u2191', 0: u'\u2193'})  # obj1 (base) vs obj2, up: pairs interaction strengthed in base
-        print(f'\nTotal enriched: {len(df_enriched)} / {len(df_nn)}')
+        logger.info('Total enriched: %d / %d', len(df_enriched), len(df_nn))
 
         if plot:
             plt.hist(df_nn['diff2'], bins=1000, color='royalblue')
@@ -124,7 +128,7 @@ def null_test(df_nn: pd.DataFrame,
         dist_test['p_val'] = dist_test['dist'].apply(
             lambda x: scipy.stats.percentileofscore(dist_null['dist'], x) / 100)
         df_enriched = dist_test[dist_test['p_val'] < pval].sort_values(by=['dist'])
-        print(f'\nTotal enriched: {len(df_enriched)} / {len(df_nn)}')
+        logger.info('Total enriched: %d / %d', len(df_enriched), len(df_nn))
         df_enriched['enriched_rank'] = np.arange(len(df_enriched)) + 1
 
         if plot:

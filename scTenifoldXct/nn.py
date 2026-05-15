@@ -1,17 +1,18 @@
 import itertools
-import numpy as np
-import scipy
-from scipy.sparse import coo_matrix
-import torch
-import torch.nn as nn
+import logging
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import scipy
+import torch
+import torch.nn as nn
+from scipy.sparse import coo_matrix
 from tqdm import tqdm
 
+from scTenifoldXct.stiefel import proj_stiefel
 
-from scTenifoldXct.stiefel import *
-cuda = torch.device('cuda')
+logger = logging.getLogger(__name__)
 
 
 class Net(nn.Module):
@@ -78,13 +79,13 @@ class ManifoldAlignmentNet: # trainer
         os.makedirs(file_dir, exist_ok = True)
         for i in range(1, self.n_models + 1):
             torch.save(self.model_dic[f'model_{i}'].state_dict(), f"{file_dir}/model_{i}.th")
-            print(f"save model to {file_dir}/model_{i}.th")
+            logger.info(f"save model to {file_dir}/model_{i}.th")
 
     def load_model_states(self, file_dir):
         for i in range(1, self.n_models + 1):
             self.model_dic[f'model_{i}'].load_state_dict(torch.load(f"{file_dir}/model_{i}.th"))
             self.model_dic[f'model_{i}'].eval()
-            print(f"load model from {file_dir}/model_{i}.th")
+            logger.info(f"load model from {file_dir}/model_{i}.th")
 
     def reload_embeds(self):
         y_preds = []
@@ -129,7 +130,7 @@ class ManifoldAlignmentNet: # trainer
 
             if t == 0 or t % 10 == 9:
                 if verbose:
-                    print(t + 1, loss.item())
+                    logger.info("%d  loss=%.6f", t + 1, loss.item())
             self.losses.append(loss.item())
 
             # Zero gradients, perform a backward pass, and update the weights.
@@ -183,7 +184,7 @@ class ManifoldAlignmentNet: # trainer
                         verbose: bool = True):
         '''output info of each pair'''
         if verbose:
-            print(f"computing pair-wise {dist_metric} distances...")
+            logger.info(f"computing pair-wise {dist_metric} distances...")
         dist_df = ManifoldAlignmentNet._pair_distance(projections, gene_names_x, gene_names_y, dist_metric=dist_metric)
         dist_df = pd.DataFrame(dist_df.stack())  # multi_index, colname 0 for dist
         dist_df = dist_df.rename_axis([1, 2]).reset_index(level=[1, 2])
@@ -207,7 +208,7 @@ class ManifoldAlignmentNet: # trainer
             df_nn_filtered = df_nn.loc[candidates].sort_values(by=['diff2'])  # dist difference^2 ranked L-R candidates
         else:
             df_nn_filtered = df_nn.loc[candidates].sort_values(by=['dist'])  # dist ranked L-R candidates
-        print("manifold aligned # of L-R pairs:", len(df_nn_filtered))
+        logger.info("manifold aligned # of L-R pairs: %d", len(df_nn_filtered))
         df_nn_filtered['rank_filtered'] = np.arange(len(df_nn_filtered)) + 1
 
         return df_nn_filtered

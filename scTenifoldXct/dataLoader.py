@@ -1,4 +1,9 @@
+import logging
 from pathlib import Path
+from typing import Union
+
+import pandas as pd
+import scanpy as sc
 from anndata import (
     AnnData,
     read_h5ad,
@@ -9,12 +14,10 @@ from anndata import (
     read_mtx,
     read_text,
 )
-import scanpy as sc
-import pandas as pd
-from typing import Union
 from scipy import sparse
 
 sc.settings.verbosity = 0
+logger = logging.getLogger(__name__)
 
 # https://scanpy.readthedocs.io/en/stable/api.html#reading
 file_attrs = ["h5ad", "csv", "xlsx", "h5", "loom", "mtx", "txt", "mat"]
@@ -37,7 +40,7 @@ def _read_counts(counts_path: str,
 
     file_attr = counts_path.split(".")[-1]
     if Path(counts_path).is_file() and file_attr in file_attrs:
-        print(f"loading counts from {counts_path}")
+        logger.info(f"loading counts from {counts_path}")
         if file_attr == "mat":
             import numpy as np
             import h5py
@@ -90,14 +93,14 @@ def build_adata(
    
     if meta_gene_path is not None and Path(meta_gene_path).is_file():
         try:
-            print("add metadata for genes")
+            logger.info("add metadata for genes")
             adata.var_names = pd.read_csv(meta_gene_path, header=header, sep=sep)[0]
             adata.var_names = adata.var_names.str.upper() # all species use upper case genes
         except Exception:
             raise ValueError("incorrect file path given to meta_gene")
     if meta_cell_path is not None and Path(meta_cell_path).is_file():
         try:
-            print("add metadata for cells")
+            logger.info("add metadata for cells")
             adata.obs = pd.read_csv(meta_cell_path, header=header, sep=sep)
             if meta_cell_cols is not None:
                 adata.obs.columns = meta_cell_cols
@@ -105,14 +108,14 @@ def build_adata(
             raise ValueError("incorrect file path given to meta_cell")
 
     if log_normalize:
-        print("normalize counts and save it to adata.layers[\"log1p\"]")
+        logger.info('normalize counts and save to adata.layers["log1p"]')
         adata.layers["raw"] = adata.X
         sc.pp.normalize_total(adata, target_sum=1e4)
         sc.pp.log1p(adata)
         adata.layers["log1p"] = adata.X  # save log normalized counts to adata.X
 
     if as_sparse:
-        print("make counts sparse...")
+        logger.info("make counts sparse...")
         adata.X = (
             sparse.csr_matrix(adata.X) if not sparse.issparse(adata.X) else adata.X
         )

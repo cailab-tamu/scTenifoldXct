@@ -1,5 +1,9 @@
+import logging
 from typing import List, Union
+
 import anndata
+
+logger = logging.getLogger(__name__)
 
 
 def get_cko_data(data: anndata.AnnData, cko_gene_names: Union[List[str], str]) -> anndata.AnnData:
@@ -10,6 +14,6 @@ def get_cko_data(data: anndata.AnnData, cko_gene_names: Union[List[str], str]) -
     data.var_names = data.var_names.str.lower()
     gene_index = [data.var_names.get_loc(gene_name) for gene_name in cko_gene_names]
     data.X[:, gene_index] = 0.
-    print(f"CKO genes {cko_gene_names} are set")
+    logger.info(f"CKO genes {cko_gene_names} are set")
     
     return data

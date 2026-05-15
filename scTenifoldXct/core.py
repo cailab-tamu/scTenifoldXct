@@ -1,22 +1,26 @@
+import logging
 import os
+from importlib.resources import files
 from os import PathLike
 from pathlib import Path
+from typing import Union
 
+import anndata
 import numpy as np
 import pandas as pd
 import scanpy as sc
-from anndata._core.views import ArrayView
-import anndata
 import scipy
 from scipy import sparse
-from typing import Union
 
 from .pcNet import make_pcNet
 from .nn import ManifoldAlignmentNet
 from .stat import null_test, chi2_test
 from .visualization import plot_pcNet_method
-# from memory_profiler import profile
+
 sc.settings.verbosity = 0
+logger = logging.getLogger(__name__)
+
+_db = files("scTenifoldXct") / "database"
 
 
 class GRN:
@@ -51,7 +55,7 @@ class GRN:
         # load pcnet
         if rebuild_GRN:
             if verbose:
-                print(f'building GRN of {name}...')
+                logger.info(f'building GRN of {name}...')
             self._net = make_pcNet(data.X, nComp = 5, as_sparse = True, timeit = verbose, **kwargs)
             self._gene_names = data.var_names.copy(deep=True)
             # if verbose:
@@ -64,7 +68,7 @@ class GRN:
                                                                    sep='\t')
         else:
             if verbose:
-                print(f'load GRN {name}')
+                logger.info(f'load GRN {name}')
             if GRN_file_dir is not None:
                 self._gene_names = pd.Index(pd.read_csv(Path(GRN_file_dir) / Path(f"gene_name_{name}.tsv"),
                                                         sep='\t')["gene_name"])
@@ -234,13 +238,8 @@ class scTenifoldXct:
         for name in self._cell_names:
             self.load_data(data, name, obs_label)
 
-        # self._LRs = self._load_db_data(Path(__file__).parent.parent / Path("data/LR.csv"),
-        #                                ['ligand', 'receptor'])
-        # self._TFs = self._load_db_data(Path(__file__).parent.parent / Path("data/TF.csv"), None)
-        import pkg_resources
-        self._LRs = self._load_db_data(pkg_resources.resource_filename('scTenifoldXct', 'database/LR.csv'),
-                                       ['ligand', 'receptor'])
-        self._TFs = self._load_db_data(pkg_resources.resource_filename('scTenifoldXct', 'database/TF.csv'), None)
+        self._LRs = self._load_db_data((_db / "LR.csv").open(), ['ligand', 'receptor'])
+        self._TFs = self._load_db_data((_db / "TF.csv").open(), None)
 
         # fill metrics
         self._LR_metrics = self.fill_metric()
@@ -259,7 +258,7 @@ class scTenifoldXct:
                           verbose=self.verbose,
                           **kwargs)
         if self.verbose:
-            print("build correspondence and initiate a trainer")
+            logger.info("build correspondence and initiate a trainer")
 
         # cal w
         self._w, self.w12_shape = self._build_w(alpha=alpha,
@@ -274,7 +273,7 @@ class scTenifoldXct:
 
         self._aligned_result = None
         if self.verbose:
-            print("scTenifoldXct init completed\n")
+            logger.info("scTenifoldXct init completed")
 
     @property
     def candidates(self):
@@ -322,7 +321,7 @@ class scTenifoldXct:
         self_knk._w[:, bool_idx] = 0
         self_knk._w = self_knk._w.tocoo()
         if self.verbose:
-            print(f"remove edges and correspondence of gene {ko_gene_list}")
+            logger.info(f"remove edges and correspondence of gene {ko_gene_list}")
         return self_knk
 
     def load_data(self, data, cell_name, obs_label):
@@ -337,11 +336,11 @@ class scTenifoldXct:
         df = df.loc[:, subsets] if subsets is not None else df
         return df
 
-    def _get_metric(self, adata: ArrayView, name):  # require normalized data
+    def _get_metric(self, adata, name):  # require normalized data
         '''compute metrics for each gene'''
         data_norm = adata.X.toarray() if scipy.sparse.issparse(adata.X) else adata.X.copy()  # adata.layers['log1p']
         if self.verbose:
-            print("(cell, feature):", data_norm.shape)
+            logger.info("(cell, feature): %s", data_norm.shape)
         if (data_norm % 1 != 0).any():  # check space: True for log (float), False for counts (int)
             mean = np.mean(data_norm, axis=0)  # .toarray()
             var = np.var(data_norm, axis=0)  # .toarray()
@@ -357,7 +356,7 @@ class scTenifoldXct:
         df = pd.concat([self._LRs, val_df], axis=1)  # concat 1:1 since sharing same index
         df = df[(df['mean_L'] > 0) & (df['mean_R'] > 0)]  # filter 0 (none or zero expression) of LR
         if self.verbose:
-            print(f"selected {df.shape[0]} LR pairs")
+            logger.info(f"selected {df.shape[0]} LR pairs")
 
         return df
 

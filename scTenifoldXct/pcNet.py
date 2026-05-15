@@ -1,10 +1,14 @@
-import numpy as np
-from scipy.sparse.linalg import svds as sparse_svds
-from scipy import sparse
-from sklearn.preprocessing import normalize
+import logging
 import os
 import time
+
+import numpy as np
 import ray
+from scipy import sparse
+from scipy.sparse.linalg import svds as sparse_svds
+from sklearn.preprocessing import normalize
+
+logger = logging.getLogger(__name__)
 
 
 def pcCoefficients(X, K, nComp):
@@ -94,7 +98,7 @@ def make_pcNet(X,
         if (n_cpus == -1) or (n_cpus > os.cpu_count()):
             n_cpus = os.cpu_count()
         ray.init(num_cpus = n_cpus)
-        print(f'ray init, using {n_cpus} CPUs')
+        logger.info(f'ray init, using {n_cpus} CPUs')
 
         X_ray = ray.put(X) # put X to distributed object store and return object ref (ID)
         # print(X_ray)
@@ -108,13 +112,13 @@ def make_pcNet(X,
         ray.shutdown()
     if timeit:
         duration = time.time() - start_time
-        print('execution time of making pcNet: {:.2f} s'.format(duration))
+        logger.info('execution time of making pcNet: {:.2f} s'.format(duration))
     return net
 
 def main():
     counts = np.random.randint(0, 10, (5, 100))
     net = make_pcNet(counts, as_sparse = True, timeit = True, n_cpus = -1)
-    print(f'input counts shape: {counts.shape},\nmake pcNet completed, shape: {net.shape}')
+    logger.info(f'input counts shape: {counts.shape}, make pcNet completed, shape: {net.shape}')
 
 if __name__ == '__main__':
     main()  

@@ -1,13 +1,16 @@
+import logging
+
 import numpy as np
 import pandas as pd
 import scipy
 from scipy import sparse
-# from memory_profiler import profile
 
 from .core import scTenifoldXct
 from .nn import ManifoldAlignmentNet
 from .stat import chi2_diff_test
 from .visualization import plot_pcNet_method
+
+logger = logging.getLogger(__name__)
 
 
 class merge_scTenifoldXct:
@@ -21,7 +24,7 @@ class merge_scTenifoldXct:
         self.mu = 0.9
         # cal big W
         if self.verbose:
-            print(f"merge samples and build correspondence")
+            logger.info("merge samples and build correspondence")
         self._W, self.W12_shape = self._build_W()
 
         self._nn_trainer = ManifoldAlignmentNet(self._get_data_arrs(),
@@ -29,7 +32,7 @@ class merge_scTenifoldXct:
                                                 n_dim=self.n_dim,
                                                 layers=None)
         if self.verbose:
-            print("merge_scTenifoldXct init completed\n")
+            logger.info("merge_scTenifoldXct init completed")
 
     def _get_data_arrs(self):  
         '''return a list of counts in numpy array, gene by cell'''
@@ -114,7 +117,7 @@ class merge_scTenifoldXct:
             df_nn_all['diff2_rank'] = np.arange(len(df_nn_all)) + 1
         self._aligned_diff_result = df_nn_all
         if self.verbose:
-            print("merged pair-wise distances")
+            logger.info("merged pair-wise distances")
         # return df_nn_all
 
     def chi2_diff_test(self,
