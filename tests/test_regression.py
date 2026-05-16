@@ -11,8 +11,9 @@ nn, stat, merge, or pcNet:
     pytest tests/test_regression.py -v
 """
 import pathlib
-import pytest
+
 import pandas as pd
+import pytest
 
 ROOT = pathlib.Path(__file__).parent.parent
 DATA = ROOT / "data"

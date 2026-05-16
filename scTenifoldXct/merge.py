@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 
 import numpy as np
@@ -12,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class merge_scTenifoldXct:
-    def __init__(self, 
-                *Xcts: scTenifoldXct, 
+    def __init__(self,
+                *Xcts: scTenifoldXct,
                 verbose: bool = True):
         self.Xcts = Xcts
         self._merge_candidates = list(set(self.Xcts[0].candidates).union(set(self.Xcts[1].candidates)))
@@ -60,32 +62,32 @@ class merge_scTenifoldXct:
 
     # @profile(precision=4)
     def get_embeds(self,
-                train = True,
-                n_steps=3000,
-                lr=0.01,
-                verbose=False,
+                train: bool = True,
+                n_steps: int = 3000,
+                lr: float = 0.01,
+                verbose: bool = False,
                 plot_losses: bool = False,
-                losses_file_name: str = None,
+                losses_file_name: str | None = None,
                 **optim_kwargs
-                ):
+                ) -> np.ndarray:
         if train:
             merge_projections = self._nn_trainer.train(n_steps=n_steps, lr=lr, verbose=verbose, **optim_kwargs)
         else:
             merge_projections = self._nn_trainer.reload_embeds()
         if plot_losses:
             self._nn_trainer.plot_losses(losses_file_name)
-       
+
         return merge_projections
 
     def plot_losses(self, **kwargs):
         self._nn_trainer.plot_losses(**kwargs)
 
 
-    def nn_aligned_diff(self, 
-                    merge_projections,
+    def nn_aligned_diff(self,
+                    merge_projections: np.ndarray,
                     dist_metric: str = "euclidean",
                     rank: bool = False
-                    ):
+                    ) -> None:
         '''pair-wise difference of aligned distance'''
         projections_split = np.array_split(merge_projections, 2)
         xct_A, xct_B = self.Xcts[0], self.Xcts[1]
@@ -103,7 +105,7 @@ class merge_scTenifoldXct:
                                                                dist_metric=dist_metric,
                                                                rank=rank,
                                                                verbose=self.verbose)
-        df_nn_all = pd.concat([self._aligned_result_A, self._aligned_result_B.drop(['ligand', 'receptor'], axis=1)], axis=1) 
+        df_nn_all = pd.concat([self._aligned_result_A, self._aligned_result_B.drop(['ligand', 'receptor'], axis=1)], axis=1)
         # print('adding column \'diff2\'...')
         df_nn_all['diff2'] = np.square(df_nn_all['dist'].iloc[:, 0] - df_nn_all['dist'].iloc[:, 1]) #there are two 'dist' cols
         if rank:
@@ -116,18 +118,18 @@ class merge_scTenifoldXct:
         # return df_nn_all
 
     def chi2_diff_test(self,
-                  dof=1,
-                  pval=0.05,
-                  cal_FDR=True,
-                  plot_result=False,
-                  ):
-        return chi2_diff_test(df_nn=self._aligned_diff_result, 
+                  dof: int = 1,
+                  pval: float = 0.05,
+                  cal_FDR: bool = True,
+                  plot_result: bool = False,
+                  ) -> pd.DataFrame:
+        return chi2_diff_test(df_nn=self._aligned_diff_result,
                         df=dof,
                         pval=pval,
                         FDR=cal_FDR,
                         candidates=self._merge_candidates,
                         plot=plot_result)
-    
+
     @property
     def aligned_diff_result(self):
         if self._aligned_diff_result is None:
@@ -138,12 +140,13 @@ class merge_scTenifoldXct:
 
 def main(args):
     from time import time
+
     import scanpy as sc
 
     if args.eva:
         adata = sc.datasets.pbmc3k()
         adata_WT = adata[
-            np.random.choice(adata.shape[0], args.n_sample, replace=False), 
+            np.random.choice(adata.shape[0], args.n_sample, replace=False),
             np.random.choice(adata.shape[1], args.n_feature, replace=False)].copy()
         adata_WT.obs["ident"] = ["cell_A"] * (len(adata_WT)//2) + ["cell_B"] * (args.n_sample-len(adata_WT)//2)
         adata_KO = adata_WT.copy()
@@ -151,22 +154,22 @@ def main(args):
         for adata in [adata_WT, adata_KO]:
             sc.pp.normalize_total(adata, target_sum=1e4)
             sc.pp.log1p(adata)
-            adata.layers["log1p"] = adata.X 
-        xct_WT = scTenifoldXct(data = adata_WT, 
+            adata.layers["log1p"] = adata.X
+        xct_WT = scTenifoldXct(data = adata_WT,
                                 source_celltype = 'cell_A',
                                 target_celltype = 'cell_B',
                                 obs_label = 'ident',
                                 rebuild_GRN = args.rebuild, # timer
-                                GRN_file_dir = './Net_example_dev_WT',  
+                                GRN_file_dir = './Net_example_dev_WT',
                                 verbose = True,
                                 n_cpus = args.n_cpus,
                                 )
-        xct_KO = scTenifoldXct(data = adata_KO, 
+        xct_KO = scTenifoldXct(data = adata_KO,
                             source_celltype = 'cell_A',
                             target_celltype = 'cell_B',
                             obs_label = 'ident',
                             rebuild_GRN = args.rebuild, # timer
-                            GRN_file_dir = './Net_example_dev_KO',  
+                            GRN_file_dir = './Net_example_dev_KO',
                             verbose = True,
                             n_cpus = args.n_cpus,
                             )
@@ -177,27 +180,27 @@ def main(args):
         ada_WT = adata[adata.obs[args.cond_label] == args.cond_WT, :].copy()
         ada_KO = adata[adata.obs[args.cond_label] == args.cond_KO, :].copy()
         del adata
-        xct_WT = scTenifoldXct(data = ada_WT, 
+        xct_WT = scTenifoldXct(data = ada_WT,
                             source_celltype = args.sender,
                             target_celltype = args.receiver,
                             obs_label = args.label,
                             rebuild_GRN = args.rebuild, # timer
-                            GRN_file_dir = args.workdir,  
+                            GRN_file_dir = args.workdir,
                             verbose = args.verbose,
                             n_cpus = args.n_cpus)
-        xct_KO = scTenifoldXct(data = ada_KO, 
+        xct_KO = scTenifoldXct(data = ada_KO,
                             source_celltype = args.sender,
                             target_celltype = args.receiver,
                             obs_label = args.label,
                             rebuild_GRN = args.rebuild, # timer
-                            GRN_file_dir = args.workdir,  
+                            GRN_file_dir = args.workdir,
                             verbose = args.verbose,
                             n_cpus = args.n_cpus)
     XCTs = merge_scTenifoldXct(xct_KO, xct_WT)
     start_t = time()
     emb = XCTs.get_embeds(train = True)
-    print('training time: {:.2f} s'.format(time()-start_t))
-    XCTs.nn_aligned_diff(emb) 
+    print(f'training time: {time()-start_t:.2f} s')
+    XCTs.nn_aligned_diff(emb)
     xcts_pairs_diff = XCTs.chi2_diff_test()
     xcts_pairs_diff.to_csv(f'{args.workdir}/{args.output}.csv')
 
@@ -226,9 +229,7 @@ if __name__ == '__main__':
     parser.add_argument('--eva', action = 'store_true')
     parser.add_argument('--n_sample', type = int, default = 100)
     parser.add_argument('--n_feature', type = int, default = 3000)
-    
+
     args = parser.parse_args()
     main(args)
-    # python -m scTenifoldXct.merge --n_sample 100 --n_feature 100 --n_cpus 8 --rebuild
-    # python -m scTenifoldXct.merge tutorials/data/adata_merge_example.h5ad NormalvsTumor N T --rebuild -s "B cells" -r "Fibroblasts" --n_cpus 8 -v
-    
+    # Example usage: see README / docs, or `sctenifoldxct-merge --help`

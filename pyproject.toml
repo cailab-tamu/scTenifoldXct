@@ -31,6 +31,7 @@ classifiers = [
 dependencies = [
     "anndata>=0.9",
     "igraph>=0.10",
+    "cairocffi",
     "matplotlib>=3.6",
     "numpy>=1.23",
     "pandas>=1.5",
@@ -44,6 +45,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "ruff>=0.1"]
+docs = ["mkdocs>=1.5", "mkdocs-material>=9.4", "mkdocstrings[python]>=0.24"]
 
 [project.urls]
 Homepage = "https://github.com/cailab-tamu/scTenifoldXct"
@@ -67,6 +69,7 @@ markers = [
 [tool.ruff]
 line-length = 127
 target-version = "py310"
+extend-exclude = ["tutorials", "docs"]
 
 [tool.ruff.lint]
-select = ["E9", "F63", "F7", "F82"]
+select = ["E", "F", "W", "I", "UP"]

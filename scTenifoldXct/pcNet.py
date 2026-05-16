@@ -15,7 +15,7 @@ def pcCoefficients(X, K, nComp):
     y = X[:,K]
     mask = np.ones(X.shape[1], dtype=bool)
     mask[K] = False
-    Xi = X[:,mask] 
+    Xi = X[:,mask]
     u, s, VT = sparse_svds(Xi, k=nComp, random_state=0) # Calling Sparse SVD Solver
     #print ('U:', U.shape, 's:', s.shape, 'VT:', VT.shape)
     V = np.fliplr(VT.T)
@@ -27,9 +27,9 @@ def pcCoefficients(X, K, nComp):
     return beta.tolist()
 
 def pcNet(X, # X: cell * gene
-    nComp: int = 3, 
-    scale: bool = True, 
-    symmetric: bool = True, 
+    nComp: int = 3,
+    scale: bool = True,
+    symmetric: bool = True,
     q: float = 0., # q: 0-100
     as_sparse: bool = True,
     random_state: int = 0):
@@ -40,15 +40,15 @@ def pcNet(X, # X: cell * gene
     X = normalize(X, axis=0)
 
     if nComp < 2 or nComp >= X.shape[1]:
-        raise ValueError('nComp should be greater or equal than 2 and lower than the total number of genes') 
+        raise ValueError('nComp should be greater or equal than 2 and lower than the total number of genes')
     else:
         np.random.seed(random_state)
-        n = X.shape[1] # genes    
-        B = np.array([pcCoefficients(X, k, nComp) for k in range(n)])    
+        n = X.shape[1] # genes
+        B = np.array([pcCoefficients(X, k, nComp) for k in range(n)])
         A = np.ones((n, n), dtype=float)
         np.fill_diagonal(A, 0)
         for i in range(n):
-            A[i, A[i, :]==1] = B[i, :]                
+            A[i, A[i, :]==1] = B[i, :]
         if scale:
             absA = abs(A)
             A = A / np.max(absA)
@@ -56,9 +56,9 @@ def pcNet(X, # X: cell * gene
             A[absA < np.percentile(absA, q)] = 0
         if symmetric: # place in the end
             A = (A + A.T)/2
-        
+
         if as_sparse:
-            A = sparse.csc_matrix(A)       
+            A = sparse.csc_matrix(A)
         return A
 
 @ray.remote
@@ -69,7 +69,7 @@ def pc_net_parallel(X,  # X: cell * gene
                     q: float = 0.,
                     as_sparse: bool = True,
                     random_state: int = 0):
-    return pcNet(X, nComp = nComp, scale = scale, symmetric = symmetric, q = q, 
+    return pcNet(X, nComp = nComp, scale = scale, symmetric = symmetric, q = q,
                  as_sparse = as_sparse, random_state = random_state)
 
 def pc_net_single(X,  # X: cell * gene
@@ -79,15 +79,15 @@ def pc_net_single(X,  # X: cell * gene
                     q: float = 0.,
                     as_sparse: bool = True,
                     random_state: int = 0):
-    return pcNet(X, nComp = nComp, scale = scale, symmetric = symmetric, q = q, 
+    return pcNet(X, nComp = nComp, scale = scale, symmetric = symmetric, q = q,
                  as_sparse = as_sparse, random_state = random_state)
 
-def make_pcNet(X, 
-          nComp: int = 3, 
-          scale: bool = True, 
-          symmetric: bool = True, 
-          q: float = 0., 
-          as_sparse: bool = True, 
+def make_pcNet(X,
+          nComp: int = 3,
+          scale: bool = True,
+          symmetric: bool = True,
+          q: float = 0.,
+          as_sparse: bool = True,
           random_state: int = 0,
           n_cpus: int = 1, # -1: use all CPUs
           timeit: bool = True):
@@ -102,17 +102,17 @@ def make_pcNet(X,
 
         X_ray = ray.put(X) # put X to distributed object store and return object ref (ID)
         # print(X_ray)
-        net = pc_net_parallel.remote(X_ray, nComp = nComp, scale = scale, symmetric = symmetric, q = q, 
+        net = pc_net_parallel.remote(X_ray, nComp = nComp, scale = scale, symmetric = symmetric, q = q,
                     as_sparse = as_sparse, random_state = random_state)
         net = ray.get(net)
     else:
-        net = pc_net_single(X, nComp = nComp, scale = scale, symmetric = symmetric, q = q, 
+        net = pc_net_single(X, nComp = nComp, scale = scale, symmetric = symmetric, q = q,
             as_sparse = as_sparse, random_state = random_state)
     if ray.is_initialized():
         ray.shutdown()
     if timeit:
         duration = time.time() - start_time
-        logger.info('execution time of making pcNet: {:.2f} s'.format(duration))
+        logger.info(f'execution time of making pcNet: {duration:.2f} s')
     return net
 
 def main():
@@ -121,6 +121,6 @@ def main():
     logger.info(f'input counts shape: {counts.shape}, make pcNet completed, shape: {net.shape}')
 
 if __name__ == '__main__':
-    main()  
-      
-      
+    main()
+
+

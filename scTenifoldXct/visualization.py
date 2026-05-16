@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import namedtuple
 
 import igraph as ig
@@ -5,7 +7,7 @@ import numpy as np
 import scipy.sparse
 
 
-def get_Xct_pairs(df):
+def get_Xct_pairs(df) -> tuple:
     return tuple(n.split('_') for n in list(df.index))
 
 
@@ -40,7 +42,7 @@ def _interact_graph(main_graph: ig.Graph, matched_g: ig.Graph):
     return main_graph
 
 
-def _parse_kws(kws, g, bbox_scale, g1=None, g2=None, 
+def _parse_kws(kws, g, bbox_scale, g1=None, g2=None,
                edge_width_scale = None, edge_width_max = None, add_edges = None):
     kws = {k: v for k, v in kws.items()}
     bbox_size = kws.pop("bbox_size")
@@ -62,10 +64,18 @@ def _parse_kws(kws, g, bbox_scale, g1=None, g2=None,
     else:
         kws["edge_width"] = [edge_width_scale * abs(w) for w in g.es['weight']]
     added_e = add_edges if add_edges is not None else 0
-    kws["edge_color"] = ['red' if all([w > 0, i < len(g.es) - added_e]) else 'blue' if i < len(g.es) - added_e else 'darkgreen' for i, w in enumerate(g.es['weight'])]
+    kws["edge_color"] = [
+        'red' if all([w > 0, i < len(g.es) - added_e])
+        else 'blue' if i < len(g.es) - added_e
+        else 'darkgreen'
+        for i, w in enumerate(g.es['weight'])
+    ]
     kws["edge_arrow_size"] = [1e-12 if i < len(g.es) - added_e else 1 for i, _ in enumerate(g.es)]
     if g1 is not None and g2 is not None:
-        kws["mark_groups"] = [(list(range(0, len(g1.vs))), mark_color[0])] + [(list(range(len(g1.vs), len(g1.vs) + len(g2.vs))), mark_color[1])]
+        kws["mark_groups"] = (
+            [(list(range(0, len(g1.vs))), mark_color[0])]
+            + [(list(range(len(g1.vs), len(g1.vs) + len(g2.vs))), mark_color[1])]
+        )
     else:
         kws["mark_groups"] = [(list(range(0, len(g.vs))), mark_color[0])]
     return kws
@@ -83,7 +93,6 @@ def plot_pcNet_method(net,
                       verbose=False,
                       edge_width_scale=None,
                       **kwargs):
-    # print('original pcnet', net._net.shape, 'dropout %: {:3f}'.format(100*np.sum(net._net == 0)/(net._net.shape[0]*net._net.shape[1])))
     subnet = net.subset_in(gene_names+tf_names, copy=True)
     # print('zeros after filter TFs:', subnet._net.shape, np.sum(subnet._net == 0))
     subnet.set_rows_and_cols_as(tf_names, 0)
@@ -134,11 +143,11 @@ def plot_pcNet_method(net,
 
 
 def plot_XNet(g1, g2,
-              gene_pairs, df_enriched=None, file_name=None,
-              verbose=False,
-              edge_width_scale=None, edge_width_max=5,
-              bbox_scale=1,
-              show = False,
+              gene_pairs, df_enriched=None, file_name: str | None = None,
+              verbose: bool = False,
+              edge_width_scale=None, edge_width_max: int = 5,
+              bbox_scale: int = 1,
+              show: bool = False,
               **kwargs):
     '''visualize merged GRN from sender and receiver cell types,
         use edge_width_scale to make two graphs width comparable (both using absolute values)'''

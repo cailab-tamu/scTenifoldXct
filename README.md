@@ -26,30 +26,48 @@ pip install .
 ### Usages
 
 #### Quick Start
-The following code runs scTenifoldXct on an example data set in the tutorials:
+The following code runs scTenifoldXct on the bundled example data set:
 ```python
+import logging
 import scanpy as sc
 import scTenifoldXct as st
 
+# scTenifoldXct logs progress via the logging module. Configure a handler
+# to see messages when verbose=True (e.g. in a script or notebook):
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+
 adata = sc.read_h5ad('data/adata_short_example.h5ad') # load data
-xct = st.scTenifoldXct(data = adata, # an AnnData 
+xct = st.scTenifoldXct(data = adata, # an AnnData
                     source_celltype = 'Inflam. FIB', # sender cell type
                     target_celltype = 'Inflam. DC', # receiver cell type
                     obs_label = 'ident', # colname in adata.obs indicating cell types
                     rebuild_GRN = True, # whether to build GRNs
                     GRN_file_dir = 'Net_example_dev',  # folder path to GRNs
-                    verbose = True, # whether to verbose the processing
+                    verbose = True, # whether to log the processing
                     n_cpus = -1) # CPU multiprocessing, -1 to use all
 emb = xct.get_embeds(train = True) # Manifold alignment to project data to low-dimensional embeddings
 xct_pairs = xct.null_test() # non-parametric test to get significant interactions
 print(xct_pairs)
 ```
 
+#### Command line
+Two console scripts are installed with the package:
+```shell
+# single-sample interaction analysis
+sctenifoldxct data/adata_short_example.h5ad --rebuild \
+    -s "Inflam. FIB" -r "Inflam. DC" --n_cpus 8 -v
+
+# two-sample differential interaction analysis
+sctenifoldxct-merge data/adata_merge_example.h5ad NormalvsTumor N T \
+    --rebuild -s "B cells" -r "Fibroblasts" --n_cpus 8 -v
+```
+Run `sctenifoldxct --help` or `sctenifoldxct-merge --help` for all options.
+
 ### Tutorial
 We have included two tutorial notebooks on scTenifoldXct usage and results visualization.
 
-Single-sample interaction analysis:<br> https://github.com/cailab-tamu/scTenifoldXct/blob/master/tutorials/tutorial-short_example.ipynb <br>
-Two-sample differential interaction analysis:<br> https://github.com/cailab-tamu/scTenifoldXct/blob/master/tutorials/tutorial-merge_short_example.ipynb 
+Single-sample interaction analysis:<br> https://github.com/cailab-tamu/scTenifoldXct/blob/main/tutorials/tutorial-short_example.ipynb <br>
+Two-sample differential interaction analysis:<br> https://github.com/cailab-tamu/scTenifoldXct/blob/main/tutorials/tutorial-merge_short_example.ipynb 
 <br/>
 
 ### Run scTenifoldXct from command-line by `Docker`
@@ -63,16 +81,16 @@ docker run -it --name xct --shm-size=8gb sctenifold
 If successful, a Bash terminal will be present in the newly created container.<br>
 An example for running single-sample analysis:
 ```shell
-python -m scTenifoldXct.core tutorials/data/adata_short_example.h5ad \
+sctenifoldxct data/adata_short_example.h5ad \
 --rebuild \
 -s "Inflam. FIB" \
 -r "Inflam. DC" \
 --n_cpus 8 \
 -v
 ```
-For runnning two-sample analysis:
+For running two-sample analysis:
 ```shell
-python -m scTenifoldXct.merge tutorials/data/adata_merge_example.h5ad \
+sctenifoldxct-merge data/adata_merge_example.h5ad \
 NormalvsTumor N T \
 --rebuild \
 -s "B cells" \

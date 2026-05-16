@@ -7,6 +7,8 @@ Installed as console scripts via pyproject.toml:
 
 These replicate the python -m scTenifoldXct.core / .merge interface.
 """
+from __future__ import annotations
+
 import argparse
 import logging
 

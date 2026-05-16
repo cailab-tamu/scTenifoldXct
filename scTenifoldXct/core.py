@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import logging
 import os
 from importlib.resources import files
 from os import PathLike
 from pathlib import Path
-from typing import Union
 
 import anndata
 import numpy as np
@@ -12,9 +13,9 @@ import scanpy as sc
 import scipy
 from scipy import sparse
 
-from .pcNet import make_pcNet
 from .nn import ManifoldAlignmentNet
-from .stat import null_test, chi2_test
+from .pcNet import make_pcNet
+from .stat import chi2_test, null_test
 from .visualization import plot_pcNet_method
 
 sc.settings.verbosity = 0
@@ -126,12 +127,12 @@ class GRN:
         self._net = sparse_matrix
         self._gene_names = gene_names
 
-    def set_rows_as(self, gene_names, value):   
+    def set_rows_as(self, gene_names, value):
         self._net[self._gene_names.isin(gene_names), :] = value
 
     def set_cols_as(self, gene_names, value):
         self._net[:, self._gene_names.isin(gene_names)] = value
-    
+
     def set_rows_and_cols_as(self, gene_names, value):
         mask = self._gene_names.isin(gene_names)[:, None] @ self._gene_names.isin(gene_names)[None, :]
         self._net[mask] = value
@@ -195,14 +196,14 @@ class scTenifoldXct:
                  source_celltype: str,
                  target_celltype: str,
                  obs_label: str,  # ident
-                 GRN_file_dir: Union[str, PathLike] = None,
+                 GRN_file_dir: str | PathLike | None = None,
                  rebuild_GRN: bool = False,
-                 query_DB: str = None,
+                 query_DB: str | None = None,
                  alpha: float = 0.5,
                  mu: float = 1.,
                  scale_w: bool = True,
                  n_dim: int = 3,
-                 verbose=True,
+                 verbose: bool = True,
                  **kwargs):
         """
         The main object used to do xct analysis.
@@ -318,15 +319,15 @@ class scTenifoldXct:
 
         return self._aligned_result
 
-    def get_data_arr(self):
+    def get_data_arr(self) -> list:
         """Return a list of expression arrays (gene x cell) per cell type."""
         return self._get_data_arr()
 
-    def copy(self):
+    def copy(self) -> scTenifoldXct:
         from copy import deepcopy
         return deepcopy(self)
 
-    def Knk(self, ko_gene_list: Union[str, list]):
+    def Knk(self, ko_gene_list: str | list) -> scTenifoldXct:
         if not isinstance(ko_gene_list, list):
             ko_gene_list = [ko_gene_list]
         gene_idx = pd.concat([self._genes[self._cell_names[0]].to_series(),
@@ -421,7 +422,7 @@ class scTenifoldXct:
                 used_col_index = np.isin(self._genes[receptor], self._LRs["receptor"])
             elif query_DB == "pairs":
                 # maintain L-R pair relationship, both > 0
-                selected_LR = self._LR_metrics[(self._LR_metrics[f"mean_L"] > 0) & (self._LR_metrics[f"mean_R"] > 0)]
+                selected_LR = self._LR_metrics[(self._LR_metrics["mean_L"] > 0) & (self._LR_metrics["mean_R"] > 0)]
                 used_row_index = np.isin(self._genes[ligand], selected_LR["ligand"])
                 used_col_index = np.isin(self._genes[receptor], selected_LR["receptor"])
             else:
@@ -443,18 +444,18 @@ class scTenifoldXct:
 
     # @profile(precision=4)
     def get_embeds(self,
-                 train = True,
-                 n_steps = 1000,
-                 lr = 0.01,
+                 train: bool = True,
+                 n_steps: int = 1000,
+                 lr: float = 0.01,
                  plot_losses: bool = False,
-                 losses_file_name: str = None,
+                 losses_file_name: str | None = None,
                  dist_metric: str = "euclidean",
                  rank: bool = False,
                  **optim_kwargs
-                 ):
+                 ) -> np.ndarray:
         if train:
-            projections = self._nn_trainer.train(n_steps=n_steps, 
-                                                    lr=lr, 
+            projections = self._nn_trainer.train(n_steps=n_steps,
+                                                    lr=lr,
                                                     **optim_kwargs)
         else:
             projections = self._nn_trainer.reload_embeds() # reload projections
@@ -484,19 +485,19 @@ class scTenifoldXct:
 
     def null_test(self,
                   filter_zeros: bool = True,
-                  pval=0.05,
-                  plot_result=False):
+                  pval: float = 0.05,
+                  plot_result: bool = False) -> pd.DataFrame:
         return null_test(self._aligned_result, self._candidates,
                          filter_zeros=filter_zeros,
                          pval=pval,
                          plot=plot_result)
 
     def chi2_test(self,
-                  dof=1,
-                  pval=0.05,
-                  cal_FDR=True,
-                  plot_result=False,
-                  ):
+                  dof: int = 1,
+                  pval: float = 0.05,
+                  cal_FDR: bool = True,
+                  plot_result: bool = False,
+                  ) -> pd.DataFrame:
         return chi2_test(df_nn=self._aligned_result, df=dof,
                          pval=pval,
                          FDR=cal_FDR,
@@ -509,28 +510,28 @@ def main(args):
     if args.eva:
         adata = sc.datasets.pbmc3k()
         adata = adata[
-            np.random.choice(adata.shape[0], args.n_sample, replace=False), 
+            np.random.choice(adata.shape[0], args.n_sample, replace=False),
             np.random.choice(adata.shape[1], args.n_feature, replace=False)].copy()
         adata.obs["ident"] = ["cell_A"] * (len(adata)//2) + ["cell_B"] * (args.n_sample-len(adata)//2)
         sc.pp.normalize_total(adata, target_sum=1e4)
         sc.pp.log1p(adata)
-        adata.layers["log1p"] = adata.X 
+        adata.layers["log1p"] = adata.X
     else:
         from .dataLoader import build_adata
         adata = build_adata(counts_path = args.file)
         print(adata)
 
-    xct = scTenifoldXct(data = adata, 
+    xct = scTenifoldXct(data = adata,
                         source_celltype = args.sender,
                         target_celltype = args.receiver,
                         obs_label = args.label,
                         rebuild_GRN = args.rebuild, # timer
-                        GRN_file_dir = args.workdir,  
+                        GRN_file_dir = args.workdir,
                         verbose = args.verbose,
                         n_cpus = args.n_cpus)
     start_t = time()
-    emb = xct.get_embeds(train = True)
-    print('training time: {:.2f} s'.format(time()-start_t))
+    xct.get_embeds(train=True)
+    logger.info('training time: %.2f s', time() - start_t)
     xct_pairs = xct.null_test()
     xct_pairs.to_csv(f'{args.workdir}/{args.output}.csv')
 
@@ -555,10 +556,9 @@ if __name__ == '__main__':
     parser.add_argument('--eva', action = 'store_true')
     parser.add_argument('--n_sample', type = int, default = 100)
     parser.add_argument('--n_feature', type = int, default = 3000)
-    
+
     args = parser.parse_args()
     main(args)
-    # python -m scTenifoldXct.core --eva --rebuild --n_sample 100 --n_feature 100 --n_cpus 8 -v
-    # python -m scTenifoldXct.core tutorials/data/adata_short_example.h5ad --rebuild -s "Inflam. FIB" -r "Inflam. DC" --n_cpus 8 -v
+    # Example usage: see README / docs, or `sctenifoldxct --help`
 
 
