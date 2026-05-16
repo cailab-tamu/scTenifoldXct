@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "scTenifoldXct"
 # Keep in sync with scTenifoldXct/version.py
-version = "0.1.0"
+version = "0.2.0"
 description = "A semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning"
 readme = "README.md"
 license = {text = "MIT"}
