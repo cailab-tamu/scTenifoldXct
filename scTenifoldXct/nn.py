@@ -17,6 +17,13 @@ from scTenifoldXct.stiefel import proj_stiefel
 logger = logging.getLogger(__name__)
 
 
+def set_seed(seed: int = 0) -> None:
+    """Set all RNG seeds for reproducible training."""
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.use_deterministic_algorithms(True, warn_only=True)
+
+
 class Net(nn.Module):
     """Define the neural network"""
     def __init__(self, D_in, H1, H2, D_out):
@@ -38,7 +45,7 @@ class ManifoldAlignmentNet: # trainer
                  w: coo_matrix,
                  n_dim,
                  layers):
-        # TODO: seed
+        set_seed()
         self.n_models, self.data_arr, self.w = self._check_data(data_arr, w=w)
         self.model_dic = self.create_models(layers, n_dim)
 
@@ -65,7 +72,6 @@ class ManifoldAlignmentNet: # trainer
                 layer_dic[i] = layers
 
         model_dic = {}
-        torch.manual_seed(0)
         for i in range(1, self.n_models + 1):
             model_dic[f'model_{i}'] = Net(self.data_arr[i - 1].shape[1], *layer_dic[i])
             self.data_arr[i - 1] = torch.from_numpy(self.data_arr[i - 1].astype(np.float32))

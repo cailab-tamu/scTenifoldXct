@@ -6,6 +6,7 @@ dependencies:
   - pip>=23
   - pip:
     - anndata>=0.9
+    - cairocffi
     - igraph>=0.10
     - matplotlib>=3.6
     - numpy>=1.23
