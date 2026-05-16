@@ -17,7 +17,7 @@ from scTenifoldXct.stiefel import proj_stiefel
 logger = logging.getLogger(__name__)
 
 
-def set_seed(seed: int = 42) -> None:
+def set_seed(seed: int = 0) -> None:
     """Set all RNG seeds for reproducible training."""
     np.random.seed(seed)
     torch.manual_seed(seed)
