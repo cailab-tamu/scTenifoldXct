@@ -31,6 +31,7 @@ classifiers = [
 dependencies = [
     "anndata>=0.9",
     "igraph>=0.10",
+    "cairocffi",
     "matplotlib>=3.6",
     "numpy>=1.23",
     "pandas>=1.5",
