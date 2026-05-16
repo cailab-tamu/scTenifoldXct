@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scTenifoldXct"
+# Keep in sync with scTenifoldXct/version.py
+version = "0.1.0"
+description = "A semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Yongjian Yang", email = "yjyang027@tamu.edu"}]
+requires-python = ">=3.10"
+keywords = [
+    "neural-network",
+    "manifold-learning",
+    "computational-biology",
+    "single-cell",
+    "cell-cell-interaction",
+    "gene-regulatory-network",
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "anndata>=0.9",
+    "igraph>=0.10",
+    "matplotlib>=3.6",
+    "numpy>=1.23",
+    "pandas>=1.5",
+    "ray>=2.0",
+    "scanpy>=1.9",
+    "scipy>=1.9",
+    "statsmodels>=0.13",
+    "torch>=2.0",
+    "tqdm>=4.60",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.1"]
+
+[project.urls]
+Homepage = "https://github.com/cailab-tamu/scTenifoldXct"
+Paper = "https://doi.org/10.1016/j.cels.2023.01.004"
+
+[project.scripts]
+sctenifoldxct = "scTenifoldXct.cli:xct"
+sctenifoldxct-merge = "scTenifoldXct.cli:xct_merge"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+scTenifoldXct = ["database/*.csv"]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow — run with pytest -m slow",
+]
+
+[tool.ruff]
+line-length = 127
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]

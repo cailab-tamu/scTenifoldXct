@@ -1,3 +1,3 @@
 recursive-include scTenifoldXct *.csv
-exclude scTenifoldXct/_deprecated.py
-exclude scTenifoldXct/_functional.py
+include README.md
+include LICENSE
