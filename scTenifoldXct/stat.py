@@ -114,7 +114,7 @@ def null_test(df_nn: pd.DataFrame,
             pval=0.05, 
             plot=False):
     '''nonparametric left tail test to have enriched pairs'''
-    if ('dist' or 'correspondence') not in df_nn.columns:
+    if 'dist' not in df_nn.columns or 'correspondence' not in df_nn.columns:
         raise IndexError('require resulted dataframe with column \'dist\' and \'correspondence\'')
 
     else:

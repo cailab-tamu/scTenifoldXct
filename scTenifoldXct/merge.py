@@ -2,13 +2,11 @@ import logging
 
 import numpy as np
 import pandas as pd
-import scipy
 from scipy import sparse
 
 from .core import scTenifoldXct
 from .nn import ManifoldAlignmentNet
 from .stat import chi2_diff_test
-from .visualization import plot_pcNet_method
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +16,7 @@ class merge_scTenifoldXct:
                 *Xcts: scTenifoldXct, 
                 verbose: bool = True):
         self.Xcts = Xcts
-        self._merge_candidates = list(set(self.Xcts[0]._candidates).union(set(self.Xcts[1]._candidates)))
+        self._merge_candidates = list(set(self.Xcts[0].candidates).union(set(self.Xcts[1].candidates)))
         self.verbose = verbose
         self.n_dim = 3
         self.mu = 0.9
@@ -34,22 +32,18 @@ class merge_scTenifoldXct:
         if self.verbose:
             logger.info("merge_scTenifoldXct init completed")
 
-    def _get_data_arrs(self):  
+    def _get_data_arrs(self):
         '''return a list of counts in numpy array, gene by cell'''
-        data_arr_A = [cell_data.X.T.toarray() if scipy.sparse.issparse(cell_data.X) else cell_data.X.T   # gene by cell
-                    for _, cell_data in self.Xcts[0]._cell_data_dic.items()]
-        data_arr_B = [cell_data.X.T.toarray() if scipy.sparse.issparse(cell_data.X) else cell_data.X.T   # gene by cell
-                    for _, cell_data in self.Xcts[1]._cell_data_dic.items()]
-        return data_arr_A + data_arr_B  # a list
+        return self.Xcts[0].get_data_arr() + self.Xcts[1].get_data_arr()
 
     def _build_W(self):
         '''build a cross-object corresponding matrix for further differential analysis'''
-        W12 = np.zeros((self.Xcts[0]._w.shape[0], self.Xcts[1]._w.shape[1]), float)
-        scaled_diag = self.mu * ((self.Xcts[0]._w).sum() + (self.Xcts[1]._w).sum()) / (4 * len(W12)) 
+        w_A, w_B = self.Xcts[0].w, self.Xcts[1].w
+        W12 = np.zeros((w_A.shape[0], w_B.shape[1]), float)
+        scaled_diag = self.mu * (w_A.sum() + w_B.sum()) / (4 * len(W12))
         np.fill_diagonal(W12, scaled_diag)
-        # W12 = W12.todok()
-        W = sparse.vstack([sparse.hstack([self.Xcts[0]._w, W12]),
-            sparse.hstack([W12.T, self.Xcts[1]._w])])      
+        W = sparse.vstack([sparse.hstack([w_A, W12]),
+                           sparse.hstack([W12.T, w_B])])
         return W, W12.shape
 
     @property
@@ -94,20 +88,21 @@ class merge_scTenifoldXct:
                     ):
         '''pair-wise difference of aligned distance'''
         projections_split = np.array_split(merge_projections, 2)
-        self._aligned_result_A = self.Xcts[0]._nn_trainer.nn_aligned_dist(projections_split[0],
-                                                                gene_names_x=self.Xcts[0]._genes[self.Xcts[0]._cell_names[0]],
-                                                                gene_names_y=self.Xcts[0]._genes[self.Xcts[0]._cell_names[1]],
-                                                                w12_shape=self.Xcts[0].w12_shape,
-                                                                dist_metric=dist_metric,
-                                                                rank=rank,
-                                                                verbose=self.verbose)
-        self._aligned_result_B = self.Xcts[1]._nn_trainer.nn_aligned_dist(projections_split[1],
-                                                                gene_names_x=self.Xcts[1]._genes[self.Xcts[1]._cell_names[0]],
-                                                                gene_names_y=self.Xcts[1]._genes[self.Xcts[1]._cell_names[1]],
-                                                                w12_shape=self.Xcts[1].w12_shape,
-                                                                dist_metric=dist_metric,
-                                                                rank=rank,
-                                                                verbose=self.verbose)
+        xct_A, xct_B = self.Xcts[0], self.Xcts[1]
+        self._aligned_result_A = xct_A.trainer.nn_aligned_dist(projections_split[0],
+                                                               gene_names_x=xct_A.genes[xct_A.cell_names[0]],
+                                                               gene_names_y=xct_A.genes[xct_A.cell_names[1]],
+                                                               w12_shape=xct_A.w12_shape,
+                                                               dist_metric=dist_metric,
+                                                               rank=rank,
+                                                               verbose=self.verbose)
+        self._aligned_result_B = xct_B.trainer.nn_aligned_dist(projections_split[1],
+                                                               gene_names_x=xct_B.genes[xct_B.cell_names[0]],
+                                                               gene_names_y=xct_B.genes[xct_B.cell_names[1]],
+                                                               w12_shape=xct_B.w12_shape,
+                                                               dist_metric=dist_metric,
+                                                               rank=rank,
+                                                               verbose=self.verbose)
         df_nn_all = pd.concat([self._aligned_result_A, self._aligned_result_B.drop(['ligand', 'receptor'], axis=1)], axis=1) 
         # print('adding column \'diff2\'...')
         df_nn_all['diff2'] = np.square(df_nn_all['dist'].iloc[:, 0] - df_nn_all['dist'].iloc[:, 1]) #there are two 'dist' cols
@@ -140,19 +135,6 @@ class merge_scTenifoldXct:
                                  "Please call train_nn() to train the neural network to get embeddings first.")
         return self._aligned_diff_result
 
-    # def plot_merge_pcNet_graph(self, 
-    #                         gene_names: list[str], 
-    #                         sample: int = 0, 
-    #                         view: str ="sender", 
-    #                         **kwargs):
-    #     if view not in ["sender", "receiver"]:
-    #         raise ValueError("view needs to be sender or receiver")
-
-    #     g = plot_pcNet_method(self.Xcts[sample]._net_A if view == "sender" else self.Xcts[sample]._net_B,
-    #                       gene_names=gene_names,
-    #                       tf_names=self.Xcts[sample]._TFs["TF_symbol"].to_list(),
-    #                       **kwargs)
-    #     return g
 
 def main(args):
     from time import time
