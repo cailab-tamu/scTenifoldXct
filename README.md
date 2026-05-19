@@ -1,4 +1,9 @@
 # scTenifoldXct
+
+[![PyPI version](https://img.shields.io/pypi/v/scTenifoldXct.svg)](https://pypi.org/project/scTenifoldXct/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://img.shields.io/badge/DOI-10.1016%2Fj.cels.2023.01.004-blue)](https://doi.org/10.1016/j.cels.2023.01.004)
+
 a semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning <br> 
 <span style="color:red;">New!</span> Data has been added. Feel free to explore and use it. <br>
 <span style="color:red;">New!</span> A standalone UI has been added. [Give it a try!](https://sctenifold.streamlit.app/)
