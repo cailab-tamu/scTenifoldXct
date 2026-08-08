@@ -150,3 +150,6 @@ tutorials/*
 !tutorials/*.ipynb
 
 CHANGELOG.md
+
+# web UI: local GRN cache for uploaded datasets (sctenifoldxct-ui --grn-dir)
+/GRNs
