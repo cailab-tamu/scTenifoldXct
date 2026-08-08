@@ -4,11 +4,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://img.shields.io/badge/DOI-10.1016%2Fj.cels.2023.01.004-blue)](https://doi.org/10.1016/j.cels.2023.01.004)
 
-a semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning <br> 
-<span style="color:red;">New!</span> Data has been added. Feel free to explore and use it. <br>
-<span style="color:red;">New!</span> A standalone UI has been added. [Give it a try!](https://sctenifold.streamlit.app/)
-[[Paper]](https://doi.org/10.1016/j.cels.2023.01.004)
-<br/>
+A semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning. [[Paper]](https://doi.org/10.1016/j.cels.2023.01.004)
+
+> 🆕 **New: a local web UI.** Run scTenifoldXct from your browser — no code required.
+> ```shell
+> pip install "scTenifoldXct[web]"
+> sctenifoldxct-ui
+> ```
+> Upload a `.h5ad` (or use the bundled example dataset), pick sender/receiver cell types, and get
+> ranked ligand-receptor pairs in a few clicks — everything runs locally, no data leaves your
+> machine. See [Web UI](#web-ui) below.
+>
+> Prefer a hosted, always-on option instead? Try the [standalone Streamlit demo](https://sctenifold.streamlit.app/).
+
 <p align="center">
     <img src="LS_git.jpeg" alt="drawing" width="300"/>
 </p>
@@ -27,6 +35,19 @@ git clone https://github.com/cailab-tamu/scTenifoldXct.git
 cd scTenifoldXct
 pip install .
 ```
+
+### Example Data
+Two real, ready-to-use datasets are bundled under [`data/`](data/) so you can try scTenifoldXct
+immediately, with no data of your own required:
+
+| File | Shape | Cell types (`ident`) | Used by |
+|---|---|---|---|
+| [`adata_short_example.h5ad`](data/adata_short_example.h5ad) | 202 cells × 3,000 genes | `Inflam. FIB`, `Inflam. DC` | single-sample analysis (`sctenifoldxct` / `st.scTenifoldXct`) |
+| [`adata_merge_example.h5ad`](data/adata_merge_example.h5ad) | 199 cells × 2,608 genes | `B cells`, `Fibroblasts` (across `NormalvsTumor` conditions `N`/`T`) | two-sample differential analysis (`sctenifoldxct-merge`) |
+
+Both are log-normalised and ready to feed straight into the Quick Start, CLI, or [Web UI](#web-ui)
+examples below — jump to whichever one you're most comfortable with and give it a try.
+See [`data/README.md`](data/README.md) for additional/larger datasets.
 
 ### Usages
 
@@ -69,14 +90,22 @@ sctenifoldxct-merge data/adata_merge_example.h5ad NormalvsTumor N T \
 Run `sctenifoldxct --help` or `sctenifoldxct-merge --help` for all options.
 
 #### Web UI
-No Python required: install the `web` extra and launch a local, point-and-click interface in your browser.
+Prefer clicking over scripting? Install the `web` extra and launch a local, point-and-click
+interface — no Python knowledge required:
 ```shell
 pip install "scTenifoldXct[web]"
 sctenifoldxct-ui
+# opens http://127.0.0.1:8000
 ```
-This opens `http://127.0.0.1:8000`, where you can upload a `.h5ad` file (or try the bundled example
-dataset), pick sender/receiver cell types, and run the analysis — everything runs locally, no data
-leaves your machine. Results (ranked ligand-receptor pairs) are shown in-browser and downloadable as CSV.
+
+From a git checkout, the UI's **"Use bundled example dataset"** button loads
+[`data/adata_short_example.h5ad`](#example-data) directly — no upload needed, so you can go from
+`pip install` to results in under a minute. Otherwise, upload your own `.h5ad`.
+
+Pick a cell-metadata column plus sender/receiver cell types, tune the analysis options if you like
+(or just leave the defaults), and hit **Run analysis**. The UI shows the top-ranked
+ligand-receptor pairs as they finish, with a full CSV download for the complete ranked list.
+Everything — data, computation, results — stays on your machine.
 
 Run `sctenifoldxct-ui --help` for options (host/port/GRN cache directory).
 
