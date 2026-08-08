@@ -18,6 +18,10 @@ A semi-supervised method for predicting cell-cell interactions and mapping cellu
 > Prefer a hosted, always-on option instead? Try the [standalone Streamlit demo](https://sctenifold.streamlit.app/).
 
 <p align="center">
+    <img src="docs/webapp-screenshot.png" alt="scTenifoldXct local web UI: load a dataset, pick sender/receiver cell types, and configure a run" width="600"/>
+</p>
+
+<p align="center">
     <img src="LS_git.jpeg" alt="drawing" width="300"/>
 </p>
 <br/>

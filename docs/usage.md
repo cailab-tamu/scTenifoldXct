@@ -57,6 +57,8 @@ Run `sctenifoldxct --help` or `sctenifoldxct-merge --help` for all options.
 
 ## Web UI
 
+![scTenifoldXct local web UI: load a dataset, pick sender/receiver cell types, and configure a run](webapp-screenshot.png)
+
 Prefer clicking over scripting? Install the `web` extra and launch a local, point-and-click
 interface — no Python knowledge required:
 
