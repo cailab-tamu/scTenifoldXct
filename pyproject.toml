@@ -44,8 +44,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7", "ruff>=0.1"]
+dev = ["httpx2>=2.0", "pytest>=7", "ruff>=0.1"]
 docs = ["mkdocs>=1.5", "mkdocs-material>=9.4", "mkdocstrings[python]>=0.24"]
+web = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "python-multipart>=0.0.9"]
 
 [project.urls]
 Homepage = "https://github.com/cailab-tamu/scTenifoldXct"
@@ -54,12 +55,13 @@ Paper = "https://doi.org/10.1016/j.cels.2023.01.004"
 [project.scripts]
 sctenifoldxct = "scTenifoldXct.cli:xct"
 sctenifoldxct-merge = "scTenifoldXct.cli:xct_merge"
+sctenifoldxct-ui = "scTenifoldXct.webapp.cli:main"
 
 [tool.setuptools.packages.find]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-scTenifoldXct = ["database/*.csv"]
+scTenifoldXct = ["database/*.csv", "webapp/static/*"]
 
 [tool.pytest.ini_options]
 markers = [

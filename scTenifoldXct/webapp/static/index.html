@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>scTenifoldXct</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>scTenifoldXct</h1>
+    <p>Cell-cell interaction inference via manifold learning — local run, no data leaves this machine.</p>
+  </header>
+
+  <main>
+    <section id="dataset-section">
+      <h2><span class="step">1</span> Dataset</h2>
+      <div class="row">
+        <button id="use-example" type="button">Use bundled example dataset</button>
+        <span class="or">or</span>
+        <label class="file-input" for="file-input">
+          Upload .h5ad
+          <input type="file" id="file-input" accept=".h5ad">
+        </label>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="already-normalized">
+        My file is already log-normalised (skip normalize + log1p)
+      </label>
+      <p id="dataset-error" class="error hidden"></p>
+      <p id="dataset-info" class="info hidden"></p>
+    </section>
+
+    <section id="run-section" class="hidden">
+      <h2><span class="step">2</span> Configure run</h2>
+      <form id="run-form">
+        <div class="grid">
+          <label class="field">
+            Cell metadata column
+            <select id="obs-label-select"></select>
+          </label>
+          <label class="field">
+            Sender cell type
+            <select id="source-celltype-select"></select>
+          </label>
+          <label class="field">
+            Receiver cell type
+            <select id="target-celltype-select"></select>
+          </label>
+          <label class="field">
+            Enrichment test
+            <select id="test-method">
+              <option value="null" selected>Nonparametric (null distribution)</option>
+              <option value="chi2">Chi-squared</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="rebuild-grn" checked>
+          Rebuild gene regulatory networks
+          <span id="rebuild-hint" class="hint hidden">— a precomputed network is available for this dataset; uncheck to reuse it and skip straight to training.</span>
+        </label>
+
+        <details id="advanced">
+          <summary>Advanced options</summary>
+          <div class="grid">
+            <label class="field">
+              Ligand-receptor database filter
+              <select id="query-db">
+                <option value="" selected>None (use all pairs)</option>
+                <option value="pairs">pairs (keep L-R pairing)</option>
+                <option value="comb">comb (any L × any R)</option>
+              </select>
+            </label>
+            <label class="field">
+              Training steps
+              <input type="number" id="n-steps" value="1000" min="1" max="20000">
+            </label>
+            <label class="field">
+              Learning rate
+              <input type="number" id="lr" value="0.01" step="0.001" min="0">
+            </label>
+            <label class="field">
+              Embedding dimensions
+              <input type="number" id="n-dim" value="3" min="1" max="50">
+            </label>
+            <label class="field">
+              Alpha <span class="hint">(mean vs. variance weight)</span>
+              <input type="number" id="alpha" value="0.5" step="0.05" min="0" max="1">
+            </label>
+            <label class="field">
+              Mu <span class="hint">(correspondence scale)</span>
+              <input type="number" id="mu" value="1" step="0.1" min="0">
+            </label>
+            <label class="field">
+              Distance metric
+              <select id="dist-metric">
+                <option value="euclidean" selected>euclidean</option>
+                <option value="cosine">cosine</option>
+                <option value="correlation">correlation</option>
+              </select>
+            </label>
+            <label class="field">
+              p-value cutoff
+              <input type="number" id="pval" value="0.05" step="0.01" min="0" max="1">
+            </label>
+            <label class="field" id="dof-field" hidden>
+              Chi2 degrees of freedom
+              <input type="number" id="dof" value="1" min="1">
+            </label>
+            <label class="field">
+              CPUs for network build
+              <input type="number" id="n-cpus" value="1" min="-1" max="32">
+            </label>
+            <label class="field">
+              Seed <span class="hint">(optional)</span>
+              <input type="number" id="seed" placeholder="random">
+            </label>
+          </div>
+          <label class="checkbox-row" id="scale-w-row">
+            <input type="checkbox" id="scale-w" checked>
+            Scale correspondence block to network magnitude
+          </label>
+          <label class="checkbox-row" id="filter-zeros-row">
+            <input type="checkbox" id="filter-zeros" checked>
+            Nonparametric test: drop zero-correspondence background pairs
+          </label>
+          <label class="checkbox-row" id="fdr-row" hidden>
+            <input type="checkbox" id="fdr" checked>
+            Chi2 test: apply Benjamini-Hochberg FDR correction
+          </label>
+        </details>
+
+        <button type="submit" id="run-button">Run analysis</button>
+      </form>
+    </section>
+
+    <section id="results-section" class="hidden">
+      <h2><span class="step">3</span> Results</h2>
+      <div id="progress-wrap" class="progress-wrap hidden">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <p id="status-bar" class="status"></p>
+      <p id="results-error" class="error hidden"></p>
+      <div id="results-table-wrap"></div>
+      <a id="download-csv" class="hidden" download>Download CSV</a>
+    </section>
+  </main>
+
+  <footer>
+    scTenifoldXct &mdash; <a href="https://github.com/cailab-tamu/scTenifoldXct" target="_blank" rel="noopener">source &amp; docs</a>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
