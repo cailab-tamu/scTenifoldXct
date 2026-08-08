@@ -5,7 +5,10 @@ cellular communication graphs via manifold learning.
 
 [Paper (Cell Systems, 2023)](https://doi.org/10.1016/j.cels.2023.01.004) ·
 [Source](https://github.com/cailab-tamu/scTenifoldXct) ·
-[Web UI](https://sctenifold.streamlit.app/)
+[Hosted demo](https://sctenifold.streamlit.app/)
+
+**New:** run scTenifoldXct from your browser with no code — `pip install "scTenifoldXct[web]"` then
+`sctenifoldxct-ui`. See [Web UI](usage.md#web-ui).
 
 ## Overview
 

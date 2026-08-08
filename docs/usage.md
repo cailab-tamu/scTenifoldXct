@@ -54,3 +54,23 @@ sctenifoldxct-merge data/adata_merge_example.h5ad NormalvsTumor N T \
 ```
 
 Run `sctenifoldxct --help` or `sctenifoldxct-merge --help` for all options.
+
+## Web UI
+
+![scTenifoldXct local web UI: load a dataset, pick sender/receiver cell types, and configure a run](webapp-screenshot.png)
+
+Prefer clicking over scripting? Install the `web` extra and launch a local, point-and-click
+interface — no Python knowledge required:
+
+```shell
+pip install "scTenifoldXct[web]"
+sctenifoldxct-ui
+# opens http://127.0.0.1:8000
+```
+
+From a git checkout, the UI's "Use bundled example dataset" button loads
+`data/adata_short_example.h5ad` directly, so you can go from install to results in under a minute.
+Otherwise, upload your own `.h5ad`. Pick a cell-metadata column plus sender/receiver cell types,
+tune the analysis options if you like, and hit **Run analysis** — ranked ligand-receptor pairs show
+up in-browser with a CSV download for the full list. Everything runs locally; no data leaves your
+machine. Run `sctenifoldxct-ui --help` for host/port/GRN-cache options.
