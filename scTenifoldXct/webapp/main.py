@@ -39,7 +39,7 @@ from .schemas import (
 logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
-MAX_UPLOAD_BYTES = 500 * 1024 * 1024  # 500 MB
+MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024  # 2 GB
 MAX_LABEL_VALUES = 50  # obs columns with more distinct values aren't useful cell-type labels
 
 
@@ -127,7 +127,7 @@ def create_app(grn_dir: str = "GRNs") -> FastAPI:
             while chunk := await file.read(1024 * 1024):
                 size += len(chunk)
                 if size > MAX_UPLOAD_BYTES:
-                    raise HTTPException(413, "file too large (limit 500 MB)")
+                    raise HTTPException(413, "file too large (limit 2 GB)")
                 tmp.write(chunk)
             tmp.close()
             try:
