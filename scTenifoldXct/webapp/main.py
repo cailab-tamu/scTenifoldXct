@@ -100,6 +100,7 @@ def _dataset_info(dataset_id: str, name: str, adata: AnnData, prebuilt_grn: bool
 def create_app(grn_dir: str = "GRNs") -> FastAPI:
     app = FastAPI(title="scTenifoldXct", description="Local UI for scTenifoldXct cell-cell interaction analysis")
     manager = JobManager(grn_dir=grn_dir)
+    app.state.manager = manager  # exposed for tests; not used by any route
 
     # -- datasets -----------------------------------------------------
     @app.get("/api/datasets/example", response_model=DatasetInfo)

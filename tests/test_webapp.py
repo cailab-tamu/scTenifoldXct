@@ -1,6 +1,7 @@
 """End-to-end tests for the local FastAPI web UI (scTenifoldXct.webapp)."""
 
 import time
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -168,6 +169,27 @@ def test_unknown_job_id_returns_404(client):
     resp = client.get("/api/jobs/does-not-exist")
     assert resp.status_code == 404
     resp = client.get("/api/jobs/does-not-exist/result")
+    assert resp.status_code == 404
+
+
+def test_reupload_evicts_previous_idle_dataset(client, small_h5ad_path):
+    dataset_a = _upload(client, small_h5ad_path)
+    _run_job_to_completion(client, dataset_a, pval=0.999999)
+    grn_dir_a = client.app.state.manager.get_dataset(dataset_a["dataset_id"]).grn_dir
+    assert Path(grn_dir_a).is_dir()  # job ran, so the GRN cache was actually built
+
+    dataset_b = _upload(client, small_h5ad_path)
+    assert dataset_b["dataset_id"] != dataset_a["dataset_id"]
+
+    # dataset_a had no in-flight job when dataset_b was uploaded, so it (and
+    # its on-disk GRN cache) should have been dropped rather than kept forever.
+    assert dataset_a["dataset_id"] not in client.app.state.manager._datasets
+    assert not Path(grn_dir_a).exists()
+
+    resp = client.post(
+        "/api/jobs",
+        json={"dataset_id": dataset_a["dataset_id"], "source_celltype": "cell_A", "target_celltype": "cell_B"},
+    )
     assert resp.status_code == 404
 
 

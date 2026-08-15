@@ -10,6 +10,7 @@ everything lives in memory — no persistence across process restarts.
 from __future__ import annotations
 
 import logging
+import shutil
 import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -80,11 +81,13 @@ class JobManager:
     def __init__(self, grn_dir: str = "GRNs"):
         self._datasets: dict[str, DatasetEntry] = {}
         self._jobs: dict[str, Job] = {}
+        self._active_jobs: dict[str, int] = {}  # dataset_id -> in-flight (queued/running) job count
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="xct-job")
         self._grn_root = grn_dir
 
     # -- datasets ---------------------------------------------------
     def add_dataset(self, adata: AnnData, name: str, prebuilt_grn_dir: str | Path | None = None) -> str:
+        self._evict_idle_datasets()
         dataset_id = uuid.uuid4().hex[:12]
         if prebuilt_grn_dir is not None:
             grn_dir, prebuilt = str(prebuilt_grn_dir), True
@@ -101,12 +104,32 @@ class JobManager:
         except KeyError as exc:
             raise DatasetNotFoundError(dataset_id) from exc
 
+    def _evict_idle_datasets(self) -> None:
+        """Drop previously loaded datasets that have no in-flight job.
+
+        The UI only ever shows one active dataset at a time — a fresh upload
+        replaces it — so anything left over from before would otherwise leak
+        forever: the AnnData stays in memory and its GRN cache stays on disk
+        with nothing left able to reference it. A dataset with a still
+        queued/running job is left alone (it stays referenced by that job
+        regardless of this dict) and gets swept on the next upload once it's
+        idle.
+        """
+        for dataset_id in list(self._datasets):
+            if self._active_jobs.get(dataset_id, 0) > 0:
+                continue
+            entry = self._datasets.pop(dataset_id)
+            self._active_jobs.pop(dataset_id, None)
+            if not entry.prebuilt_grn:
+                shutil.rmtree(entry.grn_dir, ignore_errors=True)
+
     # -- jobs ---------------------------------------------------------
     def submit(self, params: JobCreate) -> str:
         entry = self.get_dataset(params.dataset_id)  # fail fast if unknown dataset
         job_id = uuid.uuid4().hex[:12]
         job = Job(id=job_id, dataset_id=params.dataset_id, params=params)
         self._jobs[job_id] = job
+        self._active_jobs[params.dataset_id] = self._active_jobs.get(params.dataset_id, 0) + 1
         self._executor.submit(self._run, job, entry)
         return job_id
 
@@ -157,3 +180,6 @@ class JobManager:
             logger.exception("job %s failed", job.id)
             job.error = str(exc)
             job.status = "error"
+        finally:
+            # marks entry.dataset_id idle again so a later upload can evict it
+            self._active_jobs[job.dataset_id] -= 1
