@@ -6,8 +6,18 @@
 
 A semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning. [[Paper]](https://doi.org/10.1016/j.cels.2023.01.004)
 
-> 🆕 **New: a local web UI.** No code required — see [Web UI](#web-ui) below, or try the hosted
-> [Streamlit demo](https://sctenifold.streamlit.app/).
+> 🆕 **New: a local web UI.** No code required:
+> ```shell
+> pip install --no-cache-dir "scTenifoldXct[web]"
+> sctenifoldxct-ui
+> # opens http://127.0.0.1:8765
+> ```
+> Load a dataset (the bundled example needs no upload, from a git checkout — otherwise upload your
+> own `.h5ad`), pick sender/receiver cell types, and hit **Run analysis**. Ranked ligand-receptor
+> pairs show up in-browser with a full CSV download. Everything — data, computation, results —
+> stays on your machine. Run `sctenifoldxct-ui --help` for host/port/GRN-cache options.
+>
+> Prefer a hosted, always-on option instead? Try the [Streamlit demo](https://sctenifold.streamlit.app/).
 
 <p align="center">
     <img src="docs/webapp-screenshot.png" alt="scTenifoldXct local web UI: load a dataset, pick sender/receiver cell types, and configure a run" width="600"/>
@@ -79,19 +89,6 @@ sctenifoldxct-merge data/adata_merge_example.h5ad NormalvsTumor N T \
     --rebuild -s "B cells" -r "Fibroblasts" --n_cpus 8 -v
 ```
 Run `sctenifoldxct --help` or `sctenifoldxct-merge --help` for all options.
-
-#### Web UI
-Prefer clicking over scripting? Install the `web` extra and launch a local, point-and-click
-interface — no Python knowledge required:
-```shell
-pip install --no-cache-dir "scTenifoldXct[web]"
-sctenifoldxct-ui
-# opens http://127.0.0.1:8765
-```
-Load a dataset (the bundled example needs no upload, from a git checkout — otherwise upload your
-own `.h5ad`), pick sender/receiver cell types, and hit **Run analysis**. Ranked ligand-receptor
-pairs show up in-browser with a full CSV download. Everything — data, computation, results — stays
-on your machine. Run `sctenifoldxct-ui --help` for host/port/GRN-cache options.
 
 ### Tutorial
 Two tutorial notebooks cover usage and results visualization:
