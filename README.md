@@ -30,6 +30,8 @@ A semi-supervised method for predicting cell-cell interactions and mapping cellu
 
 ### Install
 
+Requires **Python 3.10+**.
+
 ```shell
 pip install scTenifoldXct
 ```
