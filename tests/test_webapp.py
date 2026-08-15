@@ -48,6 +48,20 @@ def small_h5ad_path(small_adata, tmp_path):
     return path
 
 
+@pytest.fixture
+def int_cluster_h5ad_path(small_adata, tmp_path):
+    """Same data, but cell type lives in an int-typed obs column (e.g. a
+    cluster id), like Seurat/scanpy cluster labels commonly are — as opposed
+    to the string-typed `ident` column the other fixtures use."""
+    adata = small_adata.copy()
+    n_a = (adata.obs["ident"] == "cell_A").sum()
+    n_b = (adata.obs["ident"] == "cell_B").sum()
+    adata.obs["cluster"] = np.array([0] * n_a + [1] * n_b, dtype="int32")
+    path = tmp_path / "int_cluster.h5ad"
+    adata.write_h5ad(path)
+    return path
+
+
 def _upload(client, path, already_normalized=True):
     with open(path, "rb") as fh:
         resp = client.post(
@@ -122,6 +136,20 @@ def test_run_job_end_to_end(client, small_h5ad_path):
     assert csv_resp.status_code == 200
     assert csv_resp.headers["content-type"].startswith("text/csv")
     assert csv_resp.text.splitlines()[0].startswith("pair,")
+
+
+def test_run_job_with_int_typed_obs_label(client, int_cluster_h5ad_path):
+    """Regression: an int-typed obs column (e.g. a numeric cluster id) used
+    to silently match zero cells, since cell types are always sent to the API
+    as strings but core.py compared them against obs[obs_label] without
+    coercion -- surfacing later as a confusing "require log data" error
+    instead of actually running on the selected cells."""
+    dataset = _upload(client, int_cluster_h5ad_path)
+    job_id = _run_job_to_completion(
+        client, dataset, obs_label="cluster", source_celltype="0", target_celltype="1", pval=0.999999
+    )
+    result = client.get(f"/api/jobs/{job_id}/result").json()
+    assert len(result["rows"]) >= 1
 
 
 def test_run_job_chi2(client, small_h5ad_path):
