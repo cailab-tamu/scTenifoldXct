@@ -146,7 +146,7 @@ $("run-form").addEventListener("submit", async (evt) => {
     dof: Number($("dof").value),
     fdr: $("fdr").checked,
     rebuild_grn: $("rebuild-grn").checked,
-    n_cpus: Number($("n-cpus").value),
+    n_cpus: Math.trunc(Number($("n-cpus").value)),
     seed: $("seed").value === "" ? null : Number($("seed").value),
   };
 
