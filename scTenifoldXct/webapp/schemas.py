@@ -46,7 +46,7 @@ class JobCreate(BaseModel):
     rebuild_grn: bool = Field(
         True, description="rebuild the gene regulatory networks instead of reusing a cached/prebuilt one"
     )
-    n_cpus: int = Field(1, ge=-1, le=32, description="CPUs for network reconstruction (-1 = all)")
+    n_cpus: int = Field(-1, ge=-1, le=32, description="CPUs for network reconstruction (-1 = all)")
     seed: int | None = None
 
     @model_validator(mode="after")

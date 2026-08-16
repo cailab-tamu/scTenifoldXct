@@ -4,6 +4,9 @@ const state = {
   dataset: null, // {dataset_id, name, n_genes, n_cells, obs_labels, prebuilt_grn}
   resultRows: null,
   testMethod: "null",
+  // bumped on every new/re-uploaded dataset so a still-polling job from a
+  // previous dataset can't repopulate the results section after reset.
+  datasetGeneration: 0,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -68,6 +71,7 @@ $("file-input").addEventListener("change", async (evt) => {
 
 function setDataset(info) {
   state.dataset = info;
+  resetResults();
 
   const obsCols = Object.keys(info.obs_labels || {});
   const obsSelect = $("obs-label-select");
@@ -90,7 +94,29 @@ function setDataset(info) {
   infoEl.classList.remove("hidden");
 
   $("run-section").classList.remove("hidden");
-  $("results-section").classList.add("hidden");
+}
+
+// Clears any in-progress/finished job state from a previous dataset — a
+// reupload starts fully fresh, including invalidating a still-polling job so
+// it can't repopulate the results section after this reset.
+function resetResults() {
+  state.datasetGeneration += 1;
+  state.resultRows = null;
+  state.testMethodUsed = undefined;
+
+  hide($("results-section"));
+  hide($("results-error"));
+  $("results-table-wrap").innerHTML = "";
+  $("status-bar").textContent = "";
+
+  hide($("progress-wrap"));
+  const fill = $("progress-fill");
+  fill.style.width = "0%";
+  fill.classList.remove("done", "error");
+
+  const link = $("download-csv");
+  hide(link);
+  link.removeAttribute("href");
 }
 
 $("obs-label-select").addEventListener("change", populateCelltypeOptions);
@@ -146,7 +172,7 @@ $("run-form").addEventListener("submit", async (evt) => {
     dof: Number($("dof").value),
     fdr: $("fdr").checked,
     rebuild_grn: $("rebuild-grn").checked,
-    n_cpus: Number($("n-cpus").value),
+    n_cpus: Math.trunc(Number($("n-cpus").value)),
     seed: $("seed").value === "" ? null : Number($("seed").value),
   };
 
@@ -155,6 +181,7 @@ $("run-form").addEventListener("submit", async (evt) => {
     return;
   }
 
+  const generation = state.datasetGeneration;
   $("run-button").disabled = true;
   $("results-section").classList.remove("hidden");
   hide($("results-error"));
@@ -169,8 +196,9 @@ $("run-form").addEventListener("submit", async (evt) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    await pollJob(job_id);
+    await pollJob(job_id, generation);
   } catch (err) {
+    if (state.datasetGeneration !== generation) return; // dataset was reset meanwhile
     $("status-bar").textContent = "";
     setProgress(null, "error");
     showError($("results-error"), err.message);
@@ -199,14 +227,26 @@ function setProgress(percent, mode) {
   if (percent != null) fill.style.width = `${percent}%`;
 }
 
-function pollJob(jobId) {
+// `generation` pins this poll loop to the dataset that was active when the
+// job was submitted; if the user reuploads a dataset mid-run (bumping
+// state.datasetGeneration), polling keeps running but stops touching the UI
+// so a stale job can't repopulate the (now reset) results section.
+function pollJob(jobId, generation) {
   return new Promise((resolve, reject) => {
     const tick = async () => {
+      if (state.datasetGeneration !== generation) {
+        resolve();
+        return;
+      }
       let status;
       try {
         status = await api(`/api/jobs/${jobId}`);
       } catch (err) {
         reject(err);
+        return;
+      }
+      if (state.datasetGeneration !== generation) {
+        resolve();
         return;
       }
       if (status.status === "error") {
@@ -218,7 +258,7 @@ function pollJob(jobId) {
       setProgress(STAGE_PROGRESS[status.stage] ?? 5);
       if (status.status === "done") {
         try {
-          await loadResult(jobId);
+          await loadResult(jobId, generation);
           resolve();
         } catch (err) {
           reject(err);
@@ -233,8 +273,9 @@ function pollJob(jobId) {
 
 const TOP_N = 15;
 
-async function loadResult(jobId) {
+async function loadResult(jobId, generation) {
   const result = await api(`/api/jobs/${jobId}/result`);
+  if (state.datasetGeneration !== generation) return; // dataset was reset meanwhile
   $("status-bar").textContent = `done — ${result.rows.length} pairs enriched`;
   setProgress(100, "done");
   state.resultRows = result.rows;

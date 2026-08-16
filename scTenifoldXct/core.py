@@ -347,7 +347,12 @@ class scTenifoldXct:
     def load_data(self, data, cell_name, obs_label):
         if isinstance(data, anndata.AnnData):
             self._genes[cell_name] = data.var_names
-            self._cell_data_dic[cell_name] = data[data.obs[obs_label] == cell_name, :]
+            # compare as strings: obs_label columns are often int/categorical
+            # (e.g. numeric cluster ids), while cell_name is always a str here
+            subset = data[data.obs[obs_label].astype(str) == str(cell_name), :]
+            if subset.n_obs == 0:
+                raise ValueError(f"no cells found for {cell_name!r} in obs[{obs_label!r}]")
+            self._cell_data_dic[cell_name] = subset
             self._cell_metric_dict[cell_name] = {}
             self._cell_metric_dict[cell_name] = self._get_metric(self._cell_data_dic[cell_name], cell_name)
 

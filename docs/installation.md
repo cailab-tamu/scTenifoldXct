@@ -21,7 +21,7 @@ pip install .
 ```shell
 pip install "scTenifoldXct[dev]"    # pytest + ruff
 pip install "scTenifoldXct[docs]"   # mkdocs documentation toolchain
-pip install "scTenifoldXct[web]"    # local browser UI, see Usage > Web UI
+pip install --no-cache-dir "scTenifoldXct[web]"  # local browser UI, see Usage > Web UI
 ```
 
 ## Docker

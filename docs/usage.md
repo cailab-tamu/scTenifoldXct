@@ -63,9 +63,9 @@ Prefer clicking over scripting? Install the `web` extra and launch a local, poin
 interface — no Python knowledge required:
 
 ```shell
-pip install "scTenifoldXct[web]"
+pip install --no-cache-dir "scTenifoldXct[web]"
 sctenifoldxct-ui
-# opens http://127.0.0.1:8000
+# opens http://127.0.0.1:8765
 ```
 
 From a git checkout, the UI's "Use bundled example dataset" button loads

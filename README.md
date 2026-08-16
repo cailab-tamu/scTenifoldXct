@@ -6,16 +6,18 @@
 
 A semi-supervised method for predicting cell-cell interactions and mapping cellular communication graphs via manifold learning. [[Paper]](https://doi.org/10.1016/j.cels.2023.01.004)
 
-> 🆕 **New: a local web UI.** Run scTenifoldXct from your browser — no code required.
+> 🆕 **New: a local web UI.** No code required:
 > ```shell
-> pip install "scTenifoldXct[web]"
+> pip install --no-cache-dir "scTenifoldXct[web]"
 > sctenifoldxct-ui
+> # opens http://127.0.0.1:8765
 > ```
-> Upload a `.h5ad` (or use the bundled example dataset), pick sender/receiver cell types, and get
-> ranked ligand-receptor pairs in a few clicks — everything runs locally, no data leaves your
-> machine. See [Web UI](#web-ui) below.
+> Load a dataset (the bundled example needs no upload, from a git checkout — otherwise upload your
+> own `.h5ad`), pick sender/receiver cell types, and hit **Run analysis**. Ranked ligand-receptor
+> pairs show up in-browser with a full CSV download. Everything — data, computation, results —
+> stays on your machine. Run `sctenifoldxct-ui --help` for host/port/GRN-cache options.
 >
-> Prefer a hosted, always-on option instead? Try the [standalone Streamlit demo](https://sctenifold.streamlit.app/).
+> Prefer a hosted, always-on option instead? Try the [Streamlit demo](https://sctenifold.streamlit.app/).
 
 <p align="center">
     <img src="docs/webapp-screenshot.png" alt="scTenifoldXct local web UI: load a dataset, pick sender/receiver cell types, and configure a run" width="600"/>
@@ -28,12 +30,13 @@ A semi-supervised method for predicting cell-cell interactions and mapping cellu
 
 ### Install
 
-Install scTenifoldXct from PyPI:
+Requires **Python 3.10+**.
+
 ```shell
 pip install scTenifoldXct
 ```
 
-**Install from source** (for development or the latest unreleased changes):
+**From source** (development or latest unreleased changes):
 ```shell
 git clone https://github.com/cailab-tamu/scTenifoldXct.git
 cd scTenifoldXct
@@ -41,29 +44,26 @@ pip install .
 ```
 
 ### Example Data
-Two real, ready-to-use datasets are bundled under [`data/`](data/) so you can try scTenifoldXct
-immediately, with no data of your own required:
+Two real, ready-to-use datasets are bundled under [`data/`](data/) — no data of your own required:
 
 | File | Shape | Cell types (`ident`) | Used by |
 |---|---|---|---|
 | [`adata_short_example.h5ad`](data/adata_short_example.h5ad) | 202 cells × 3,000 genes | `Inflam. FIB`, `Inflam. DC` | single-sample analysis (`sctenifoldxct` / `st.scTenifoldXct`) |
 | [`adata_merge_example.h5ad`](data/adata_merge_example.h5ad) | 199 cells × 2,608 genes | `B cells`, `Fibroblasts` (across `NormalvsTumor` conditions `N`/`T`) | two-sample differential analysis (`sctenifoldxct-merge`) |
 
-Both are log-normalised and ready to feed straight into the Quick Start, CLI, or [Web UI](#web-ui)
-examples below — jump to whichever one you're most comfortable with and give it a try.
-See [`data/README.md`](data/README.md) for additional/larger datasets.
+Both are log-normalised and ready to feed straight into the examples below. See
+[`data/README.md`](data/README.md) for additional/larger datasets.
 
 ### Usages
 
 #### Quick Start
-The following code runs scTenifoldXct on the bundled example data set:
 ```python
 import logging
 import scanpy as sc
 import scTenifoldXct as st
 
-# scTenifoldXct logs progress via the logging module. Configure a handler
-# to see messages when verbose=True (e.g. in a script or notebook):
+# scTenifoldXct logs progress via the logging module; configure a handler to
+# see messages when verbose=True (e.g. in a script or notebook):
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 adata = sc.read_h5ad('data/adata_short_example.h5ad') # load data
@@ -81,7 +81,6 @@ print(xct_pairs)
 ```
 
 #### Command line
-Two console scripts are installed with the package:
 ```shell
 # single-sample interaction analysis
 sctenifoldxct data/adata_short_example.h5ad --rebuild \
@@ -93,43 +92,20 @@ sctenifoldxct-merge data/adata_merge_example.h5ad NormalvsTumor N T \
 ```
 Run `sctenifoldxct --help` or `sctenifoldxct-merge --help` for all options.
 
-#### Web UI
-Prefer clicking over scripting? Install the `web` extra and launch a local, point-and-click
-interface — no Python knowledge required:
-```shell
-pip install "scTenifoldXct[web]"
-sctenifoldxct-ui
-# opens http://127.0.0.1:8000
-```
-
-From a git checkout, the UI's **"Use bundled example dataset"** button loads
-[`data/adata_short_example.h5ad`](#example-data) directly — no upload needed, so you can go from
-`pip install` to results in under a minute. Otherwise, upload your own `.h5ad`.
-
-Pick a cell-metadata column plus sender/receiver cell types, tune the analysis options if you like
-(or just leave the defaults), and hit **Run analysis**. The UI shows the top-ranked
-ligand-receptor pairs as they finish, with a full CSV download for the complete ranked list.
-Everything — data, computation, results — stays on your machine.
-
-Run `sctenifoldxct-ui --help` for options (host/port/GRN cache directory).
-
 ### Tutorial
-We have included two tutorial notebooks on scTenifoldXct usage and results visualization.
+Two tutorial notebooks cover usage and results visualization:
 
-Single-sample interaction analysis:<br> https://github.com/cailab-tamu/scTenifoldXct/blob/main/tutorials/tutorial-short_example.ipynb <br>
-Two-sample differential interaction analysis:<br> https://github.com/cailab-tamu/scTenifoldXct/blob/main/tutorials/tutorial-merge_short_example.ipynb 
-<br/>
+- Single-sample interaction analysis: https://github.com/cailab-tamu/scTenifoldXct/blob/main/tutorials/tutorial-short_example.ipynb
+- Two-sample differential interaction analysis: https://github.com/cailab-tamu/scTenifoldXct/blob/main/tutorials/tutorial-merge_short_example.ipynb
 
 ### Run scTenifoldXct from command-line by `Docker`
-scTenifoldXct provides command-line utilities for users who are not familiar with Python.<br>
-A Docker image of scTenifoldXct can be built from the repository. The Docker image has all required packages and databases included. 
+A Docker image with all required packages and databases included, for users not familiar with Python:
 
 ```shell
 docker build -t sctenifold .
 docker run -it --name xct --shm-size=8gb sctenifold
 ```
-If successful, a Bash terminal will be present in the newly created container.<br>
-An example for running single-sample analysis:
+This drops you into a Bash terminal in the container. Example single-sample run:
 ```shell
 sctenifoldxct data/adata_short_example.h5ad \
 --rebuild \
@@ -138,7 +114,7 @@ sctenifoldxct data/adata_short_example.h5ad \
 --n_cpus 8 \
 -v
 ```
-For running two-sample analysis:
+Two-sample analysis:
 ```shell
 sctenifoldxct-merge data/adata_merge_example.h5ad \
 NormalvsTumor N T \
@@ -148,11 +124,8 @@ NormalvsTumor N T \
 --n_cpus 8 \
 -v
 ```
-Users should copy their own data to the container for their analyses. 
-
-When analysis completes, hit Ctrl + p and Ctrl + q to detach from the container and then copy the result to the host:
+Copy your own data into the container for your analyses. When done, detach with Ctrl+p Ctrl+q and
+copy results back to the host:
 ```shell
 docker cp xct:/app/xct_results/ .
 ```
-
-
